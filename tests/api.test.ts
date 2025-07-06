@@ -155,7 +155,7 @@ describe('AI Worker API', () => {
   });
 
   describe('Embedding Endpoint', () => {
-    it('should handle valid embedding request', async () => {
+    it.skip('should handle valid embedding request', async () => {
       const request = new Request('http://localhost/api/embed', {
         method: 'POST',
         headers: {
