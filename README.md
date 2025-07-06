@@ -1,0 +1,376 @@
+# Cloudflare AI Worker API
+
+A production-ready AI API service built with Cloudflare Workers that provides OpenAI-compatible endpoints for chat completions, text completions, embeddings, and more.
+
+## Features
+
+- 🤖 **AI Endpoints**: Chat, completion, embedding, and model listing
+- 🔐 **Authentication**: Bearer token-based API key authentication
+- 🚦 **Rate Limiting**: Configurable rate limits with KV storage
+- 🌐 **CORS Support**: Cross-origin request handling
+- 📊 **Logging**: Structured logging with request/response tracking
+- 🧪 **Testing**: Comprehensive test suite with Vitest
+- 🚀 **CI/CD**: GitHub Actions deployment pipeline
+- 📝 **TypeScript**: Full TypeScript support with strict typing
+
+## Quick Start
+
+### 1. Clone and Install
+
+```bash
+git clone <your-repo-url>
+cd ai-worker-api
+npm install
+```
+
+### 2. Configuration
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate an API key:
+
+```bash
+npm run generate-api-key
+```
+
+Update `wrangler.toml` with your configuration:
+
+```toml
+name = "ai-worker-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "your-kv-namespace-id"  # Replace with your KV namespace ID
+
+[vars]
+ALLOWED_ORIGINS = "*"
+API_SECRET_KEY = "your-generated-api-key"
+```
+
+### 3. Development
+
+```bash
+# Start development server
+npm run dev
+
+# Run tests
+npm run test
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+### 4. Deployment
+
+```bash
+# Deploy to production
+npm run deploy
+
+# Or use GitHub Actions (recommended)
+# Push to main branch to trigger automatic deployment
+```
+
+## API Endpoints
+
+### Authentication
+
+All endpoints except `/api/health` require a Bearer token:
+
+```bash
+Authorization: Bearer your-api-key-here
+```
+
+### Health Check
+
+```bash
+GET /api/health
+```
+
+Returns service health and available models.
+
+### List Models
+
+```bash
+GET /api/models
+Authorization: Bearer your-api-key
+```
+
+### Chat Completion
+
+```bash
+POST /api/chat
+Authorization: Bearer your-api-key
+Content-Type: application/json
+
+{
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Hello, how are you?"}
+  ],
+  "model": "@cf/meta/llama-3.1-8b-instruct",
+  "max_tokens": 1024,
+  "temperature": 0.7
+}
+```
+
+### Text Completion
+
+```bash
+POST /api/complete
+Authorization: Bearer your-api-key
+Content-Type: application/json
+
+{
+  "prompt": "The weather today is",
+  "max_tokens": 100,
+  "temperature": 0.7
+}
+```
+
+### Text Embeddings
+
+```bash
+POST /api/embed
+Authorization: Bearer your-api-key
+Content-Type: application/json
+
+{
+  "input": "This is a test sentence.",
+  "model": "@cf/baai/bge-base-en-v1.5"
+}
+```
+
+## Example Usage
+
+### JavaScript/TypeScript
+
+```javascript
+const API_BASE = 'https://your-worker.your-subdomain.workers.dev';
+const API_KEY = 'your-api-key';
+
+async function chatCompletion(messages) {
+  const response = await fetch(`${API_BASE}/api/chat`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messages,
+      max_tokens: 1024,
+      temperature: 0.7,
+    }),
+  });
+  
+  return await response.json();
+}
+
+// Usage
+const result = await chatCompletion([
+  { role: 'user', content: 'Hello!' }
+]);
+console.log(result.choices[0].message.content);
+```
+
+### Python
+
+```python
+import requests
+
+API_BASE = 'https://your-worker.your-subdomain.workers.dev'
+API_KEY = 'your-api-key'
+
+def chat_completion(messages):
+    response = requests.post(
+        f'{API_BASE}/api/chat',
+        headers={
+            'Authorization': f'Bearer {API_KEY}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'messages': messages,
+            'max_tokens': 1024,
+            'temperature': 0.7,
+        }
+    )
+    return response.json()
+
+# Usage
+result = chat_completion([
+    {'role': 'user', 'content': 'Hello!'}
+])
+print(result['choices'][0]['message']['content'])
+```
+
+### cURL
+
+```bash
+curl -X POST https://your-worker.your-subdomain.workers.dev/api/chat \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.7
+  }'
+```
+
+## Available Models
+
+### Chat & Completion Models
+- `@cf/meta/llama-3.1-8b-instruct` (default)
+- `@cf/mistral/mistral-7b-instruct-v0.1`
+
+### Embedding Models
+- `@cf/baai/bge-base-en-v1.5` (default)
+
+## Rate Limits
+
+- **Default**: 100 requests per hour per API key
+- **Headers**: Rate limit information is included in response headers
+  - `X-RateLimit-Limit`: Maximum requests allowed
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `API_SECRET_KEY` | API authentication key | Required |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `*` |
+| `RATE_LIMIT_REQUESTS` | Max requests per window | `100` |
+| `RATE_LIMIT_WINDOW` | Rate limit window in seconds | `3600` |
+| `ENVIRONMENT` | Environment name | `production` |
+
+## GitHub Actions Setup
+
+Add these secrets to your GitHub repository:
+
+- `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID  
+- `API_SECRET_KEY`: Your API secret key for production
+- `API_SECRET_KEY_STAGING`: Your API secret key for staging
+
+## Development
+
+### Project Structure
+
+```
+ai-worker-api/
+├── src/
+│   ├── index.ts              # Main worker entry point
+│   ├── types.ts              # TypeScript interfaces
+│   ├── handlers/             # Request handlers
+│   │   ├── chat.ts
+│   │   ├── completion.ts
+│   │   ├── embedding.ts
+│   │   ├── models.ts
+│   │   └── health.ts
+│   ├── middleware/           # Middleware functions
+│   │   ├── auth.ts
+│   │   ├── cors.ts
+│   │   └── rateLimit.ts
+│   └── utils/               # Utility functions
+│       ├── cache.ts
+│       └── logger.ts
+├── tests/                   # Test files
+├── scripts/                 # Utility scripts
+└── .github/workflows/       # GitHub Actions
+```
+
+### Adding New Endpoints
+
+1. Create a new handler in `src/handlers/`
+2. Add types to `src/types.ts`
+3. Register the route in `src/index.ts`
+4. Add tests in `tests/`
+5. Update documentation
+
+### Testing
+
+```bash
+# Run all tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm run test tests/api.test.ts
+```
+
+## Security
+
+- API keys are validated for all protected endpoints
+- Request/response logging excludes sensitive information
+- CORS is configurable with origin restrictions
+- Rate limiting prevents abuse
+- Input validation on all endpoints
+
+## Error Handling
+
+The API returns standard HTTP status codes with JSON error responses:
+
+```json
+{
+  "error": {
+    "message": "Error description",
+    "type": "error_type",
+    "code": "error_code"
+  }
+}
+```
+
+Common error types:
+- `authentication_error`: Invalid or missing API key
+- `rate_limit_exceeded`: Too many requests
+- `invalid_request_error`: Invalid request parameters
+- `server_error`: Internal server error
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Support
+
+For issues and questions:
+- GitHub Issues: [Create an issue](https://github.com/your-username/ai-worker-api/issues)
+- Documentation: This README
+- Examples: See `/examples` directory (coming soon)
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- Chat completion endpoint
+- Text completion endpoint  
+- Embedding endpoint
+- Model listing endpoint
+- Authentication middleware
+- Rate limiting
+- CORS support
+- Comprehensive testing
+- GitHub Actions CI/CD

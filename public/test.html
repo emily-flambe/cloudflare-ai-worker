@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Worker API Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        pre {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .endpoint-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Worker API Test Page</h1>
+        
+        <div class="form-group">
+            <label for="apiUrl">API Base URL:</label>
+            <input type="text" id="apiUrl" placeholder="https://your-worker.your-subdomain.workers.dev" value="http://localhost:8787">
+        </div>
+        
+        <div class="form-group">
+            <label for="apiKey">API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your API key">
+        </div>
+        
+        <div class="endpoint-tabs">
+            <button class="tab active" onclick="showTab('health')">Health</button>
+            <button class="tab" onclick="showTab('models')">Models</button>
+            <button class="tab" onclick="showTab('chat')">Chat</button>
+            <button class="tab" onclick="showTab('completion')">Completion</button>
+            <button class="tab" onclick="showTab('embedding')">Embedding</button>
+        </div>
+        
+        <div id="health" class="tab-content active">
+            <h3>Health Check</h3>
+            <p>Test the health endpoint (no API key required).</p>
+            <button onclick="testHealth()">Test Health</button>
+        </div>
+        
+        <div id="models" class="tab-content">
+            <h3>List Models</h3>
+            <p>Get available AI models.</p>
+            <button onclick="testModels()">Get Models</button>
+        </div>
+        
+        <div id="chat" class="tab-content">
+            <h3>Chat Completion</h3>
+            <div class="form-group">
+                <label for="chatMessages">Messages (JSON):</label>
+                <textarea id="chatMessages" rows="4" placeholder='[{"role": "user", "content": "Hello, how are you?"}]'>[{"role": "user", "content": "Hello, how are you?"}]</textarea>
+            </div>
+            <div class="form-group">
+                <label for="chatModel">Model:</label>
+                <select id="chatModel">
+                    <option value="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+                    <option value="@cf/mistral/mistral-7b-instruct-v0.1">Mistral 7B</option>
+                </select>
+            </div>
+            <button onclick="testChat()">Send Chat</button>
+        </div>
+        
+        <div id="completion" class="tab-content">
+            <h3>Text Completion</h3>
+            <div class="form-group">
+                <label for="completionPrompt">Prompt:</label>
+                <textarea id="completionPrompt" rows="3" placeholder="The weather today is">The weather today is</textarea>
+            </div>
+            <div class="form-group">
+                <label for="completionModel">Model:</label>
+                <select id="completionModel">
+                    <option value="@cf/meta/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+                    <option value="@cf/mistral/mistral-7b-instruct-v0.1">Mistral 7B</option>
+                </select>
+            </div>
+            <button onclick="testCompletion()">Complete Text</button>
+        </div>
+        
+        <div id="embedding" class="tab-content">
+            <h3>Text Embedding</h3>
+            <div class="form-group">
+                <label for="embeddingInput">Input Text:</label>
+                <textarea id="embeddingInput" rows="3" placeholder="This is a test sentence.">This is a test sentence.</textarea>
+            </div>
+            <button onclick="testEmbedding()">Get Embedding</button>
+        </div>
+        
+        <div id="response" class="response" style="display: none;">
+            <h4>Response:</h4>
+            <pre id="responseBody"></pre>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showResponse(data, isError = false) {
+            const responseDiv = document.getElementById('response');
+            const responseBody = document.getElementById('responseBody');
+            
+            responseDiv.style.display = 'block';
+            responseDiv.className = isError ? 'response error' : 'response success';
+            responseBody.textContent = JSON.stringify(data, null, 2);
+        }
+        
+        function getBaseUrl() {
+            return document.getElementById('apiUrl').value.trim();
+        }
+        
+        function getApiKey() {
+            return document.getElementById('apiKey').value.trim();
+        }
+        
+        function getHeaders(includeAuth = true) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (includeAuth) {
+                const apiKey = getApiKey();
+                if (apiKey) {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                }
+            }
+            
+            return headers;
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${getBaseUrl()}/api/health`, {
+                    method: 'GET',
+                    headers: getHeaders(false)
+                });
+                
+                const data = await response.json();
+                showResponse(data, !response.ok);
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+        
+        async function testModels() {
+            try {
+                const response = await fetch(`${getBaseUrl()}/api/models`, {
+                    method: 'GET',
+                    headers: getHeaders(true)
+                });
+                
+                const data = await response.json();
+                showResponse(data, !response.ok);
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+        
+        async function testChat() {
+            try {
+                const messages = JSON.parse(document.getElementById('chatMessages').value);
+                const model = document.getElementById('chatModel').value;
+                
+                const response = await fetch(`${getBaseUrl()}/api/chat`, {
+                    method: 'POST',
+                    headers: getHeaders(true),
+                    body: JSON.stringify({
+                        messages,
+                        model,
+                        max_tokens: 1024,
+                        temperature: 0.7
+                    })
+                });
+                
+                const data = await response.json();
+                showResponse(data, !response.ok);
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+        
+        async function testCompletion() {
+            try {
+                const prompt = document.getElementById('completionPrompt').value;
+                const model = document.getElementById('completionModel').value;
+                
+                const response = await fetch(`${getBaseUrl()}/api/complete`, {
+                    method: 'POST',
+                    headers: getHeaders(true),
+                    body: JSON.stringify({
+                        prompt,
+                        model,
+                        max_tokens: 1024,
+                        temperature: 0.7
+                    })
+                });
+                
+                const data = await response.json();
+                showResponse(data, !response.ok);
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+        
+        async function testEmbedding() {
+            try {
+                const input = document.getElementById('embeddingInput').value;
+                
+                const response = await fetch(`${getBaseUrl()}/api/embed`, {
+                    method: 'POST',
+                    headers: getHeaders(true),
+                    body: JSON.stringify({
+                        input,
+                        model: '@cf/baai/bge-base-en-v1.5'
+                    })
+                });
+                
+                const data = await response.json();
+                showResponse(data, !response.ok);
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

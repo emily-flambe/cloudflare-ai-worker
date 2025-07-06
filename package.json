@@ -1,0 +1,33 @@
+{
+  "name": "ai-worker-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers AI API service",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "lint": "eslint src --ext .ts,.js",
+    "lint:fix": "eslint src --ext .ts,.js --fix",
+    "typecheck": "tsc --noEmit",
+    "generate-api-key": "node scripts/generate-api-key.js"
+  },
+  "keywords": ["cloudflare", "workers", "ai", "api", "typescript"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241011.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0",
+    "wrangler": "^3.57.1"
+  },
+  "dependencies": {
+    "itty-router": "^5.0.17"
+  }
+}

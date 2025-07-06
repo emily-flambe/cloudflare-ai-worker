@@ -1,0 +1,26 @@
+name = "ai-worker-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "9eb37cd3c9a945a49a96c5260c421b95"
+preview_id = "cdb02b221510462aba3ad33c94eb0cde"
+
+[vars]
+ALLOWED_ORIGINS = "*"
+RATE_LIMIT_REQUESTS = "100"
+RATE_LIMIT_WINDOW = "3600"
+API_SECRET_KEY = "ak_mcs973nm_51ef8fa045a07188bd03de963c667a251c1f14441bf72c0170e8bd42e047186a"
+
+[env.production]
+name = "ai-worker-api"
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+name = "ai-worker-api-staging"
+vars = { ENVIRONMENT = "staging" }
