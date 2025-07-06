@@ -12,7 +12,7 @@ import { createLogContext, logRequest, logResponse, logError } from './utils/log
 
 const router = Router();
 
-router.all('*', handleCorsPreflightRequest);
+router.options('*', handleCorsPreflightRequest);
 router.get('/api/health', handleHealthRequest);
 router.get('/api/models', authenticateAndHandle(handleModelsRequest));
 router.post('/api/chat', authenticateAndHandle(handleChatRequest));
