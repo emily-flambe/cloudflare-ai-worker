@@ -82,6 +82,44 @@ npm run deploy
 # Push to main branch to trigger automatic deployment
 ```
 
+## 🧪 Test Your Deployed API
+
+Once deployed, test your API with these working curl commands:
+
+### Health Check (No Authentication)
+```bash
+curl https://ai-worker-api.emily-cogsdill.workers.dev/api/health
+```
+**Response**: Service status and available models
+
+### List Available Models  
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+```
+**Response**: List of all available AI models
+
+### Test Authentication
+```bash
+# Valid request (replace with your actual API key)
+curl -H "Authorization: Bearer ak_mcs973nm_51ef8fa045a07188bd03de963c667a251c1f14441bf72c0170e8bd42e047186a" \
+  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+
+# Invalid request (should return 401)
+curl -H "Authorization: Bearer invalid-key" \
+  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+```
+
+### Chat Completion (⚠️ Currently experiencing issues - see [CHAT_ENDPOINT_ISSUE.md](./CHAT_ENDPOINT_ISSUE.md))
+```bash
+curl -X POST https://ai-worker-api.emily-cogsdill.workers.dev/api/chat \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Hello!"}], "max_tokens": 50}'
+```
+
+Replace `ai-worker-api.emily-cogsdill.workers.dev` with your actual Worker URL and use your generated API key.
+
 ## API Endpoints
 
 ### Authentication
