@@ -7,11 +7,21 @@ const mockEnv: Env = {
     run: async (model: string, options: any) => {
       if (model.includes('embedding')) {
         return {
-          data: Array(384).fill(0).map(() => Math.random() - 0.5),
+          result: {
+            data: Array(384).fill(0).map(() => Math.random() - 0.5),
+          },
+          success: true,
+          errors: [],
+          messages: [],
         };
       }
       return {
-        response: 'This is a test response from the AI model.',
+        result: {
+          response: 'This is a test response from the AI model.',
+        },
+        success: true,
+        errors: [],
+        messages: [],
       };
     },
   } as any,
@@ -36,7 +46,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.status).toBe('healthy');
@@ -51,7 +61,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(401);
       expect(data.error.type).toBe('authentication_error');
@@ -66,7 +76,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.object).toBe('list');
@@ -84,7 +94,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(401);
       expect(data.error.type).toBe('authentication_error');
@@ -103,7 +113,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(400);
       expect(data.error.type).toBe('invalid_request_error');
@@ -122,7 +132,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.object).toBe('chat.completion');
@@ -145,7 +155,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.object).toBe('text_completion');
@@ -168,7 +178,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.object).toBe('list');
@@ -220,7 +230,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(404);
       expect(data.error.type).toBe('not_found');
@@ -232,7 +242,7 @@ describe('AI Worker API', () => {
       });
 
       const response = await worker.fetch(request, mockEnv);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(response.status).toBe(200);
       expect(data.name).toBe('Cloudflare AI Worker API');

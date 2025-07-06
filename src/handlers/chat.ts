@@ -22,15 +22,19 @@ export async function handleChatRequest(
       content: msg.content,
     }));
 
-    const aiResponse = await env.AI.run(model, {
+    const aiResponse = await env.AI.run(model as any, {
       messages,
       max_tokens: maxTokens,
       temperature,
-    });
+    }) as any;
 
-    if (!aiResponse || !aiResponse.response) {
+    if (!aiResponse || !aiResponse.success || !aiResponse.result?.response) {
+      const errorMessage = aiResponse?.errors?.length > 0 
+        ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
+        : 'Failed to generate response from AI model';
+      
       return createErrorResponse(
-        'Failed to generate response from AI model',
+        errorMessage,
         HTTP_STATUS.BAD_GATEWAY
       );
     }
@@ -45,15 +49,15 @@ export async function handleChatRequest(
           index: 0,
           message: {
             role: 'assistant',
-            content: aiResponse.response,
+            content: aiResponse.result.response,
           },
           finish_reason: 'stop',
         },
       ],
       usage: {
         prompt_tokens: estimateTokens(messages.map(m => m.content).join(' ')),
-        completion_tokens: estimateTokens(aiResponse.response),
-        total_tokens: estimateTokens(messages.map(m => m.content).join(' ') + aiResponse.response),
+        completion_tokens: estimateTokens(aiResponse.result.response),
+        total_tokens: estimateTokens(messages.map(m => m.content).join(' ') + aiResponse.result.response),
       },
     };
 
