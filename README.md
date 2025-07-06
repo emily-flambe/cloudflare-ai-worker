@@ -110,7 +110,7 @@ curl -H "Authorization: Bearer invalid-key" \
   https://ai-worker-api.emily-cogsdill.workers.dev/api/models
 ```
 
-### Chat Completion (⚠️ Currently experiencing issues - see [CHAT_ENDPOINT_ISSUE.md](./CHAT_ENDPOINT_ISSUE.md))
+### Chat Completion (⚠️ Currently experiencing issues - see [Issue #1](https://github.com/emily-flambe/cloudflare-ai-worker/issues/1))
 ```bash
 curl -X POST https://ai-worker-api.emily-cogsdill.workers.dev/api/chat \
   -H "Authorization: Bearer your-api-key" \
