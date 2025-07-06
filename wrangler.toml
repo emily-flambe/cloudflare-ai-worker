@@ -20,9 +20,16 @@ RATE_LIMIT_REQUESTS = "100"
 RATE_LIMIT_WINDOW = "3600"
 API_SECRET_KEY = "ak_mcs973nm_51ef8fa045a07188bd03de963c667a251c1f14441bf72c0170e8bd42e047186a"
 
+[[routes]]
+pattern = "ai.emilycogsdill.com/*"
+zone_name = "emilycogsdill.com"
+
 [env.production]
 name = "ai-worker-api"
 vars = { ENVIRONMENT = "production" }
+routes = [
+  { pattern = "ai.emilycogsdill.com/*", zone_name = "emilycogsdill.com" }
+]
 
 [env.staging]
 name = "ai-worker-api-staging"
