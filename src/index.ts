@@ -28,7 +28,6 @@ export default {
     try {
       logRequest(logContext);
       
-      const url = new URL(request.url);
       const origin = request.headers.get('Origin');
       
       if (request.method === 'OPTIONS') {
@@ -99,7 +98,7 @@ function authenticateAndHandle(
   };
 }
 
-async function handleNotFound(request: Request, env: Env): Promise<Response> {
+async function handleNotFound(request: Request, _env: Env): Promise<Response> {
   const url = new URL(request.url);
   
   if (url.pathname === '/' || url.pathname === '') {

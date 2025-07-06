@@ -4,8 +4,8 @@ import { getAvailableModels } from './models';
 const startTime = Date.now();
 
 export async function handleHealthRequest(
-  request: Request,
-  env: Env
+  _request: Request,
+  _env: Env
 ): Promise<Response> {
   try {
     const now = Date.now();

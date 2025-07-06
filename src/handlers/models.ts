@@ -1,8 +1,8 @@
 import { Env, ModelsResponse, ModelInfo, HTTP_STATUS, MODELS } from '../types';
 
 export async function handleModelsRequest(
-  request: Request,
-  env: Env
+  _request: Request,
+  _env: Env
 ): Promise<Response> {
   try {
     const models: ModelInfo[] = [
