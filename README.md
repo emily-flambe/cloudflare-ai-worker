@@ -395,7 +395,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues and questions:
-- GitHub Issues: [Create an issue](https://github.com/your-username/ai-worker-api/issues)
+- GitHub Issues: [Create an issue](https://github.com/emily-flambe/ai-worker-api/issues)
 - Documentation: This README
 - Examples: See `/examples` directory (coming soon)
 

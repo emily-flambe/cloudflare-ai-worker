@@ -114,7 +114,7 @@ async function handleNotFound(request: Request, _env: Env): Promise<Response> {
           'POST /api/complete - Text completions',
           'POST /api/embed - Text embeddings',
         ],
-        documentation: 'https://github.com/your-username/ai-worker-api',
+        documentation: 'https://github.com/emily-flambe/ai-worker-api',
       }),
       {
         status: HTTP_STATUS.OK,
