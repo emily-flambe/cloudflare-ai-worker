@@ -35,10 +35,8 @@ export async function handleSurveyNormalizationRequest(
       temperature: 0.3, // Lower temperature for more consistent normalization
     }) as any;
 
-    if (!aiResponse || !aiResponse.success || !aiResponse.result?.response) {
-      const errorMessage = aiResponse?.errors?.length > 0 
-        ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
-        : 'Failed to generate response from AI model';
+    if (!aiResponse || !aiResponse.response) {
+      const errorMessage = 'Failed to generate response from AI model';
       
       return createErrorResponse(
         errorMessage,
@@ -46,7 +44,7 @@ export async function handleSurveyNormalizationRequest(
       );
     }
 
-    const parsedResult = parseAIResponse(aiResponse.result.response);
+    const parsedResult = parseAIResponse(aiResponse.response);
     if (!parsedResult) {
       return createErrorResponse(
         'Failed to parse AI response for survey normalization',
@@ -64,9 +62,9 @@ export async function handleSurveyNormalizationRequest(
       category: body.category || parsedResult.category,
       suggestions: parsedResult.suggestions,
       usage: {
-        prompt_tokens: estimateTokens(systemPrompt + userPrompt),
-        completion_tokens: estimateTokens(aiResponse.result.response),
-        total_tokens: estimateTokens(systemPrompt + userPrompt + aiResponse.result.response),
+        prompt_tokens: aiResponse.usage?.prompt_tokens || estimateTokens(systemPrompt + userPrompt),
+        completion_tokens: aiResponse.usage?.completion_tokens || estimateTokens(aiResponse.response),
+        total_tokens: aiResponse.usage?.total_tokens || estimateTokens(systemPrompt + userPrompt + aiResponse.response),
       },
     };
 

@@ -7,12 +7,7 @@ const mockEnv: Env = {
     run: async (model: string, options: any) => {
       if (model.includes('embedding')) {
         return {
-          result: {
-            data: Array(384).fill(0).map(() => Math.random() - 0.5),
-          },
-          success: true,
-          errors: [],
-          messages: [],
+          data: Array(384).fill(0).map(() => Math.random() - 0.5),
         };
       }
       
@@ -23,34 +18,34 @@ const mockEnv: Env = {
         
         if (systemMessage?.content?.includes('survey question normalization')) {
           return {
-            result: {
-              response: JSON.stringify({
-                normalized_question: "What is your preferred pet type?",
-                confidence_score: 0.95,
-                category: "pet_preferences",
-                suggestions: [
-                  {
-                    question: "What is your preferred pet type?",
-                    confidence: 0.95,
-                    reasoning: "Standardized format for pet preference questions, removes bias and ambiguity"
-                  }
-                ]
-              }),
+            response: JSON.stringify({
+              normalized_question: "What is your preferred pet type?",
+              confidence_score: 0.95,
+              category: "pet_preferences",
+              suggestions: [
+                {
+                  question: "What is your preferred pet type?",
+                  confidence: 0.95,
+                  reasoning: "Standardized format for pet preference questions, removes bias and ambiguity"
+                }
+              ]
+            }),
+            usage: {
+              prompt_tokens: 150,
+              completion_tokens: 50,
+              total_tokens: 200,
             },
-            success: true,
-            errors: [],
-            messages: [],
           };
         }
       }
       
       return {
-        result: {
-          response: 'This is a test response from the AI model.',
+        response: 'This is a test response from the AI model.',
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 8,
+          total_tokens: 18,
         },
-        success: true,
-        errors: [],
-        messages: [],
       };
     },
   } as any,
