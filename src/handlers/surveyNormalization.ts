@@ -86,7 +86,7 @@ export async function handleSurveyNormalizationRequest(
 }
 
 function validateSurveyNormalizationRequest(body: SurveyNormalizationRequest): string | null {
-  if (!body.question) {
+  if (body.question === undefined || body.question === null) {
     return 'question field is required';
   }
 
