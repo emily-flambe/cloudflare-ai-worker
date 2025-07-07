@@ -18,7 +18,7 @@ preview_id = "cdb02b221510462aba3ad33c94eb0cde"
 ALLOWED_ORIGINS = "*"
 RATE_LIMIT_REQUESTS = "100"
 RATE_LIMIT_WINDOW = "3600"
-API_SECRET_KEY = "ak_mcs973nm_51ef8fa045a07188bd03de963c667a251c1f14441bf72c0170e8bd42e047186a"
+# API_SECRET_KEY should be set as a secret, not in vars
 
 [[routes]]
 pattern = "ai.emilycogsdill.com/*"
