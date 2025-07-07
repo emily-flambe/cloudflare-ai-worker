@@ -18,17 +18,20 @@ export async function handleEmbeddingRequest(
     const embeddings = await Promise.all(
       inputs.map(async (input, index) => {
         try {
-          const aiResponse = await env.AI.run(model, {
+          const aiResponse = await env.AI.run(model as any, {
             text: input,
-          });
+          }) as any;
 
-          if (!aiResponse || !aiResponse.data || !Array.isArray(aiResponse.data)) {
-            throw new Error('Invalid embedding response from AI model');
+          if (!aiResponse || !aiResponse.success || !aiResponse.result?.data || !Array.isArray(aiResponse.result.data)) {
+            const errorMessage = aiResponse?.errors?.length > 0 
+              ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
+              : 'Invalid embedding response from AI model';
+            throw new Error(errorMessage);
           }
 
           return {
             object: 'embedding',
-            embedding: aiResponse.data,
+            embedding: aiResponse.result.data,
             index,
           };
         } catch (error) {

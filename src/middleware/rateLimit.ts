@@ -117,8 +117,10 @@ export function getClientIdentifier(request: Request): string {
   
   const xForwardedFor = request.headers.get('X-Forwarded-For');
   if (xForwardedFor) {
-    const ip = xForwardedFor.split(',')[0].trim();
-    return `ip:${ip}`;
+    const ip = xForwardedFor.split(',')[0]?.trim();
+    if (ip) {
+      return `ip:${ip}`;
+    }
   }
   
   return 'anonymous';

@@ -24,15 +24,19 @@ export async function handleCompletionRequest(
       },
     ];
 
-    const aiResponse = await env.AI.run(model, {
+    const aiResponse = await env.AI.run(model as any, {
       messages,
       max_tokens: maxTokens,
       temperature,
-    });
+    }) as any;
 
-    if (!aiResponse || !aiResponse.response) {
+    if (!aiResponse || !aiResponse.success || !aiResponse.result?.response) {
+      const errorMessage = aiResponse?.errors?.length > 0 
+        ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
+        : 'Failed to generate response from AI model';
+      
       return createErrorResponse(
-        'Failed to generate response from AI model',
+        errorMessage,
         HTTP_STATUS.BAD_GATEWAY
       );
     }
@@ -45,14 +49,14 @@ export async function handleCompletionRequest(
       choices: [
         {
           index: 0,
-          text: aiResponse.response,
+          text: aiResponse.result.response,
           finish_reason: 'stop',
         },
       ],
       usage: {
         prompt_tokens: estimateTokens(body.prompt),
-        completion_tokens: estimateTokens(aiResponse.response),
-        total_tokens: estimateTokens(body.prompt + aiResponse.response),
+        completion_tokens: estimateTokens(aiResponse.result.response),
+        total_tokens: estimateTokens(body.prompt + aiResponse.result.response),
       },
     };
 

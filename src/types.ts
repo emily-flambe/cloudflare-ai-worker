@@ -1,7 +1,8 @@
 export interface Env {
   AI: Ai;
   RATE_LIMIT: KVNamespace;
-  API_SECRET_KEY: string;
+  SECRETS_STORE: any; // Secrets Store binding
+  API_SECRET_KEY?: string; // Optional fallback, will be removed
   ALLOWED_ORIGINS: string;
   RATE_LIMIT_REQUESTS: string;
   RATE_LIMIT_WINDOW: string;
