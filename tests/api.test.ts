@@ -31,7 +31,15 @@ const mockEnv: Env = {
     delete: async (key: string) => {},
     list: async (options?: any) => ({ keys: [] }),
   } as any,
-  API_SECRET_KEY: 'test-secret-key',
+  SECRETS_STORE: {
+    get: async (key: string) => {
+      if (key === 'ai-worker-api-key') {
+        return 'test-secret-key';
+      }
+      return null;
+    },
+  } as any,
+  API_SECRET_KEY: 'test-secret-key', // Fallback for backward compatibility
   ALLOWED_ORIGINS: '*',
   RATE_LIMIT_REQUESTS: '100',
   RATE_LIMIT_WINDOW: '3600',

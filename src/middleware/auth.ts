@@ -20,9 +20,18 @@ export async function authenticateRequest(
     return createUnauthorizedResponse('Missing API token');
   }
 
-  const expectedToken = env.API_SECRET_KEY;
+  // Get API key from Secrets Store with fallback to worker secret
+  let expectedToken: string | null = null;
+  
+  try {
+    expectedToken = await env.SECRETS_STORE.get('ai-worker-api-key');
+  } catch (error) {
+    console.warn('Failed to get API key from Secrets Store, falling back to worker secret:', error);
+    expectedToken = env.API_SECRET_KEY || null;
+  }
+
   if (!expectedToken) {
-    console.error('API_SECRET_KEY not configured');
+    console.error('API_SECRET_KEY not found in Secrets Store or worker secrets');
     return createServerErrorResponse('Server configuration error');
   }
 

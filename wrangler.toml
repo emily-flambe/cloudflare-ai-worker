@@ -9,6 +9,9 @@ enabled = true
 [ai]
 binding = "AI"
 
+[[secrets_store]]
+binding = "SECRETS_STORE"
+
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "9eb37cd3c9a945a49a96c5260c421b95"
