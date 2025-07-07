@@ -28,10 +28,8 @@ export async function handleChatRequest(
       temperature,
     }) as any;
 
-    if (!aiResponse || !aiResponse.success || !aiResponse.result?.response) {
-      const errorMessage = aiResponse?.errors?.length > 0 
-        ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
-        : 'Failed to generate response from AI model';
+    if (!aiResponse || !aiResponse.response) {
+      const errorMessage = 'Failed to generate response from AI model';
       
       return createErrorResponse(
         errorMessage,
@@ -49,15 +47,15 @@ export async function handleChatRequest(
           index: 0,
           message: {
             role: 'assistant',
-            content: aiResponse.result.response,
+            content: aiResponse.response,
           },
           finish_reason: 'stop',
         },
       ],
       usage: {
         prompt_tokens: estimateTokens(messages.map(m => m.content).join(' ')),
-        completion_tokens: estimateTokens(aiResponse.result.response),
-        total_tokens: estimateTokens(messages.map(m => m.content).join(' ') + aiResponse.result.response),
+        completion_tokens: aiResponse.usage?.completion_tokens || estimateTokens(aiResponse.response),
+        total_tokens: aiResponse.usage?.total_tokens || estimateTokens(messages.map(m => m.content).join(' ') + aiResponse.response),
       },
     };
 

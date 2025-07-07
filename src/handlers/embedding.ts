@@ -22,16 +22,14 @@ export async function handleEmbeddingRequest(
             text: input,
           }) as any;
 
-          if (!aiResponse || !aiResponse.success || !aiResponse.result?.data || !Array.isArray(aiResponse.result.data)) {
-            const errorMessage = aiResponse?.errors?.length > 0 
-              ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
-              : 'Invalid embedding response from AI model';
+          if (!aiResponse || !aiResponse.data || !Array.isArray(aiResponse.data)) {
+            const errorMessage = 'Invalid embedding response from AI model';
             throw new Error(errorMessage);
           }
 
           return {
             object: 'embedding',
-            embedding: aiResponse.result.data,
+            embedding: aiResponse.data,
             index,
           };
         } catch (error) {

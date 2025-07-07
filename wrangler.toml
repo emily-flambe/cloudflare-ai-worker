@@ -9,8 +9,10 @@ enabled = true
 [ai]
 binding = "AI"
 
-[[secrets_store]]
-binding = "SECRETS_STORE"
+# Secrets Store binding - feature may not be available yet
+# [[unsafe.bindings]]
+# name = "SECRETS_STORE" 
+# type = "secrets_store"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"

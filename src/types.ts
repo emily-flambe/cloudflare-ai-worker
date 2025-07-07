@@ -188,3 +188,31 @@ export const HTTP_STATUS = {
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
 } as const;
+
+export interface SurveyNormalizationRequest {
+  question: string;
+  category?: string;
+  context?: string;
+}
+
+export interface NormalizationSuggestion {
+  question: string;
+  confidence: number;
+  reasoning: string;
+}
+
+export interface SurveyNormalizationResponse {
+  id: string;
+  object: string;
+  created: number;
+  original_question: string;
+  normalized_question: string;
+  confidence_score: number;
+  category?: string;
+  suggestions: NormalizationSuggestion[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}

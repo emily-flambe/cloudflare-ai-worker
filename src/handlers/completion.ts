@@ -30,10 +30,8 @@ export async function handleCompletionRequest(
       temperature,
     }) as any;
 
-    if (!aiResponse || !aiResponse.success || !aiResponse.result?.response) {
-      const errorMessage = aiResponse?.errors?.length > 0 
-        ? `AI model error: ${aiResponse.errors.map((e: any) => e.message || e).join(', ')}`
-        : 'Failed to generate response from AI model';
+    if (!aiResponse || !aiResponse.response) {
+      const errorMessage = 'Failed to generate response from AI model';
       
       return createErrorResponse(
         errorMessage,
@@ -49,14 +47,14 @@ export async function handleCompletionRequest(
       choices: [
         {
           index: 0,
-          text: aiResponse.result.response,
+          text: aiResponse.response,
           finish_reason: 'stop',
         },
       ],
       usage: {
         prompt_tokens: estimateTokens(body.prompt),
-        completion_tokens: estimateTokens(aiResponse.result.response),
-        total_tokens: estimateTokens(body.prompt + aiResponse.result.response),
+        completion_tokens: aiResponse.usage?.completion_tokens || estimateTokens(aiResponse.response),
+        total_tokens: aiResponse.usage?.total_tokens || estimateTokens(body.prompt + aiResponse.response),
       },
     };
 
