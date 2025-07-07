@@ -47,13 +47,25 @@ compatibility_date = "2024-01-01"
 [ai]
 binding = "AI"
 
+[[secrets_store]]
+binding = "SECRETS_STORE"
+
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "your-kv-namespace-id"  # Replace with your KV namespace ID
 
 [vars]
 ALLOWED_ORIGINS = "*"
-API_SECRET_KEY = "your-generated-api-key"
+RATE_LIMIT_REQUESTS = "100"
+RATE_LIMIT_WINDOW = "3600"
+# API_SECRET_KEY is now stored in Cloudflare Secrets Store
+```
+
+Set your API key in Cloudflare Secrets Store:
+
+```bash
+wrangler secret-store put ai-worker-api-key
+# Enter your API key when prompted
 ```
 
 ### 3. Development
@@ -88,37 +100,37 @@ Once deployed, test your API with these working curl commands:
 
 ### Health Check (No Authentication)
 ```bash
-curl https://ai-worker-api.emily-cogsdill.workers.dev/api/health
+curl https://ai.emilycogsdill.com/api/health
 ```
 **Response**: Service status and available models
 
 ### List Available Models  
 ```bash
 curl -H "Authorization: Bearer your-api-key" \
-  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+  https://ai.emilycogsdill.com/api/models
 ```
 **Response**: List of all available AI models
 
 ### Test Authentication
 ```bash
 # Valid request (replace with your actual API key)
-curl -H "Authorization: Bearer ak_mcs973nm_51ef8fa045a07188bd03de963c667a251c1f14441bf72c0170e8bd42e047186a" \
-  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+curl -H "Authorization: Bearer your-api-key" \
+  https://ai.emilycogsdill.com/api/models
 
 # Invalid request (should return 401)
 curl -H "Authorization: Bearer invalid-key" \
-  https://ai-worker-api.emily-cogsdill.workers.dev/api/models
+  https://ai.emilycogsdill.com/api/models
 ```
 
-### Chat Completion (⚠️ Currently experiencing issues - see [Issue #1](https://github.com/emily-flambe/cloudflare-ai-worker/issues/1))
+### Chat Completion
 ```bash
-curl -X POST https://ai-worker-api.emily-cogsdill.workers.dev/api/chat \
+curl -X POST https://ai.emilycogsdill.com/api/chat \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Hello!"}], "max_tokens": 50}'
 ```
 
-Replace `ai-worker-api.emily-cogsdill.workers.dev` with your actual Worker URL and use your generated API key.
+Replace `your-api-key` with your actual API key from Cloudflare Secrets Store.
 
 ## API Endpoints
 
@@ -195,7 +207,7 @@ Content-Type: application/json
 ### JavaScript/TypeScript
 
 ```javascript
-const API_BASE = 'https://your-worker.your-subdomain.workers.dev';
+const API_BASE = 'https://ai.emilycogsdill.com';
 const API_KEY = 'your-api-key';
 
 async function chatCompletion(messages) {
@@ -227,7 +239,7 @@ console.log(result.choices[0].message.content);
 ```python
 import requests
 
-API_BASE = 'https://your-worker.your-subdomain.workers.dev'
+API_BASE = 'https://ai.emilycogsdill.com'
 API_KEY = 'your-api-key'
 
 def chat_completion(messages):
@@ -255,7 +267,7 @@ print(result['choices'][0]['message']['content'])
 ### cURL
 
 ```bash
-curl -X POST https://your-worker.your-subdomain.workers.dev/api/chat \
+curl -X POST https://ai.emilycogsdill.com/api/chat \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -284,15 +296,27 @@ curl -X POST https://your-worker.your-subdomain.workers.dev/api/chat \
   - `X-RateLimit-Remaining`: Requests remaining in current window
   - `X-RateLimit-Reset`: Unix timestamp when limit resets
 
-## Environment Variables
+## Configuration
+
+### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `API_SECRET_KEY` | API authentication key | Required |
 | `ALLOWED_ORIGINS` | CORS allowed origins | `*` |
 | `RATE_LIMIT_REQUESTS` | Max requests per window | `100` |
 | `RATE_LIMIT_WINDOW` | Rate limit window in seconds | `3600` |
 | `ENVIRONMENT` | Environment name | `production` |
+
+### Secrets Store
+
+| Secret | Description | Required |
+|--------|-------------|----------|
+| `ai-worker-api-key` | API authentication key | Yes |
+
+Set secrets using:
+```bash
+wrangler secret-store put ai-worker-api-key
+```
 
 ## GitHub Actions Setup
 
