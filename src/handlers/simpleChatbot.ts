@@ -1,5 +1,4 @@
-import { Env, HTTP_STATUS, DEFAULT_MODELS } from '../types';
-import { generateId } from '../utils/logger';
+import { Env, DEFAULT_MODELS } from '../types';
 
 export interface SimpleChatRequest {
   message: string;
@@ -9,6 +8,10 @@ export interface SimpleChatRequest {
 export interface SimpleChatResponse {
   response: string;
   error?: string;
+}
+
+interface AIChatResponse {
+  response: string;
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful AI assistant. Please provide clear, accurate, and helpful responses.`;
@@ -39,11 +42,11 @@ export async function handleSimpleChatbotRequest(
     ];
 
     // Call Cloudflare AI
-    const aiResponse = await env.AI.run(DEFAULT_MODELS.CHAT as any, {
+    const aiResponse = await env.AI.run(DEFAULT_MODELS.CHAT, {
       messages,
       max_tokens: 512,
       temperature: 0.7,
-    }) as any;
+    }) as AIChatResponse;
 
     if (!aiResponse || !aiResponse.response) {
       console.error('AI response missing or invalid:', aiResponse);

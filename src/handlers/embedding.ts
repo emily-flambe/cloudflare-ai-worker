@@ -18,9 +18,13 @@ export async function handleEmbeddingRequest(
     const embeddings = await Promise.all(
       inputs.map(async (input, index) => {
         try {
-          const aiResponse = await env.AI.run(model as any, {
+          interface AIEmbeddingModelResponse {
+            data: number[];
+          }
+
+          const aiResponse = await env.AI.run(model, {
             text: input,
-          }) as any;
+          }) as AIEmbeddingModelResponse;
 
           if (!aiResponse || !aiResponse.data || !Array.isArray(aiResponse.data)) {
             const errorMessage = 'Invalid embedding response from AI model';
