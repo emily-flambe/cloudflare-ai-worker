@@ -29,11 +29,15 @@ export async function handleSurveyNormalizationRequest(
       },
     ];
 
-    const aiResponse = await env.AI.run(model as any, {
+    interface AISurveyModelResponse {
+      response: string;
+    }
+
+    const aiResponse = await env.AI.run(model, {
       messages,
       max_tokens: 1024,
       temperature: 0.3, // Lower temperature for more consistent normalization
-    }) as any;
+    }) as AISurveyModelResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';

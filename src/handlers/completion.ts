@@ -24,11 +24,15 @@ export async function handleCompletionRequest(
       },
     ];
 
-    const aiResponse = await env.AI.run(model as any, {
+    interface AICompletionModelResponse {
+      response: string;
+    }
+
+    const aiResponse = await env.AI.run(model, {
       messages,
       max_tokens: maxTokens,
       temperature,
-    }) as any;
+    }) as AICompletionModelResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';

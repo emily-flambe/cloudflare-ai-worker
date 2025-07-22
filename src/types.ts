@@ -1,7 +1,13 @@
+interface SecretsStore {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
 export interface Env {
   AI: Ai;
   RATE_LIMIT: KVNamespace;
-  SECRETS_STORE: any; // Secrets Store binding
+  SECRETS_STORE: SecretsStore; // Secrets Store binding
   API_SECRET_KEY?: string; // Optional fallback, will be removed
   ALLOWED_ORIGINS: string;
   RATE_LIMIT_REQUESTS: string;

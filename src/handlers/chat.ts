@@ -22,11 +22,15 @@ export async function handleChatRequest(
       content: msg.content,
     }));
 
-    const aiResponse = await env.AI.run(model as any, {
+    interface AIChatModelResponse {
+      response: string;
+    }
+
+    const aiResponse = await env.AI.run(model, {
       messages,
       max_tokens: maxTokens,
       temperature,
-    }) as any;
+    }) as AIChatModelResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';
