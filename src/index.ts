@@ -9,6 +9,7 @@ import { handleEmbeddingRequest } from './handlers/embedding';
 import { handleModelsRequest } from './handlers/models';
 import { handleHealthRequest } from './handlers/health';
 import { handleSurveyNormalizationRequest } from './handlers/surveyNormalization';
+import { handleSimpleChatbotRequest } from './handlers/simpleChatbot';
 import { createLogContext, logRequest, logResponse, logError } from './utils/logger';
 
 const router = Router();
@@ -20,6 +21,7 @@ router.post('/api/chat', authenticateAndHandle(handleChatRequest));
 router.post('/api/complete', authenticateAndHandle(handleCompletionRequest));
 router.post('/api/embed', authenticateAndHandle(handleEmbeddingRequest));
 router.post('/api/normalize-survey-question', authenticateAndHandle(handleSurveyNormalizationRequest));
+router.post('/api/v1/chat', authenticateAndHandle(handleSimpleChatbotRequest));
 router.all('*', handleNotFound);
 
 export default {
@@ -116,6 +118,7 @@ async function handleNotFound(request: Request, _env: Env): Promise<Response> {
           'POST /api/complete - Text completions',
           'POST /api/embed - Text embeddings',
           'POST /api/normalize-survey-question - Survey question normalization',
+          'POST /api/v1/chat - Generic chat with customizable system prompts',
         ],
         documentation: 'https://github.com/emily-flambe/ai-worker-api',
       }),

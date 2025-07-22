@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+  title: Generic AI Chat API
+  description: Customizable AI-powered chat endpoint with system prompt support for creating specialized assistants
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/emily-flambe/cloudflare-ai-worker
+servers:
+  - url: https://ai.emilycogsdill.com
+    description: Production server (dev? what is dev?)
+paths:
+  /api/v1/chat:
+    post:
+      summary: Send a message to the AI chat endpoint
+      description: Sends a message to the AI with optional system prompt customization for creating specialized assistants
+      operationId: sendChatMessage
+      tags:
+        - Chat
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              basicQuestion:
+                summary: Basic question without system prompt
+                value:
+                  message: "What is machine learning?"
+              withSystemPrompt:
+                summary: Question with custom assistant personality
+                value:
+                  message: "What is machine learning?"
+                  systemPrompt: "You are a professor of computer science. Explain concepts in an academic but accessible way."
+              cuttyChatbot:
+                summary: Cutty the Cuttlefish for specific app
+                value:
+                  message: "How do I generate synthetic data?"
+                  systemPrompt: "You are Cutty the Cuttlefish, a helpful assistant for the Cutty app that generates synthetic person data."
+      responses:
+        '200':
+          description: Successful response from the chatbot
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Maximum number of requests allowed per hour
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Number of requests remaining in the current window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when the rate limit resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                successResponse:
+                  summary: Successful chatbot response
+                  value:
+                    response: "I'd be happy to help you with the Cutty app! The app allows you to generate synthetic person data including names, addresses, emails, and phone numbers. You can filter by US states and download the results as CSV files."
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingMessage:
+                  summary: Missing message field
+                  value:
+                    error: "Message is required and must be a string"
+                messageTooLong:
+                  summary: Message exceeds length limit
+                  value:
+                    error: "Message is too long (max 4000 characters)"
+        '401':
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+              examples:
+                invalidApiKey:
+                  summary: Invalid API key
+                  value:
+                    error:
+                      message: "Invalid or missing API key"
+                      type: "authentication_error"
+                      code: "invalid_api_key"
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: Rate limit exceeded
+                  value:
+                    error:
+                      message: "Rate limit exceeded. Please try again later."
+                      type: "rate_limit_error"
+                      code: "rate_limit_exceeded"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Server error
+                  value:
+                    error: "Sorry, I encountered an error. Please try again."
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: Use your API key as the bearer token
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The user's message to send to the chatbot
+          minLength: 1
+          maxLength: 4000
+          example: "How do I generate synthetic data?"
+        systemPrompt:
+          type: string
+          description: Optional system prompt to customize AI behavior and personality
+          example: "You are a helpful customer support agent. Be professional and empathetic."
+    ChatResponse:
+      type: object
+      required:
+        - response
+      properties:
+        response:
+          type: string
+          description: The chatbot's response message
+          example: "I'd be happy to help you generate synthetic data! The Cutty app makes it easy to create realistic but fake personal information for testing."
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: "Message is required and must be a string"
+    AuthErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+            - type
+            - code
+          properties:
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Invalid or missing API key"
+            type:
+              type: string
+              description: Error category
+              enum:
+                - authentication_error
+                - rate_limit_error
+                - invalid_request_error
+                - server_error
+              example: "authentication_error"
+            code:
+              type: string
+              description: Machine-readable error code
+              example: "invalid_api_key"
+tags:
+  - name: Chat
+    description: Chat operations for interacting with customizable AI assistants

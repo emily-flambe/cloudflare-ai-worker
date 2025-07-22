@@ -157,7 +157,7 @@ GET /api/models
 Authorization: Bearer your-api-key
 ```
 
-### Chat Completion
+### Chat Completion (OpenAI-compatible)
 
 ```bash
 POST /api/chat
@@ -174,6 +174,21 @@ Content-Type: application/json
   "temperature": 0.7
 }
 ```
+
+### Simple Chat (Generic with System Prompts)
+
+```bash
+POST /api/v1/chat
+Authorization: Bearer your-api-key
+Content-Type: application/json
+
+{
+  "message": "Your question here",
+  "systemPrompt": "Optional: Define the AI's personality and behavior"
+}
+```
+
+This endpoint allows you to create custom AI assistants with different personalities. See the [integration guide](.project/integration.md) for examples.
 
 ### Text Completion
 
@@ -199,6 +214,19 @@ Content-Type: application/json
 {
   "input": "This is a test sentence.",
   "model": "@cf/baai/bge-base-en-v1.5"
+}
+```
+
+### Survey Question Normalization
+
+```bash
+POST /api/normalize-survey-question
+Authorization: Bearer your-api-key
+Content-Type: application/json
+
+{
+  "question": "On a scale of 1-10, how satisfied are you?",
+  "options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 }
 ```
 
