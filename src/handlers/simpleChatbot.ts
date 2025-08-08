@@ -1,4 +1,4 @@
-import { Env, DEFAULT_MODELS, ReasoningEffortLevel } from '../types';
+import { Env, DEFAULT_MODELS, ReasoningEffortLevel, AIRunParameters, AIChatResponse } from '../types';
 
 export interface SimpleChatRequest {
   message: string;
@@ -12,14 +12,6 @@ export interface SimpleChatResponse {
   error?: string;
 }
 
-interface AIChatResponse {
-  response: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
 
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful AI assistant. Please provide clear, accurate, and helpful responses.`;
 
@@ -56,7 +48,7 @@ export async function handleSimpleChatbotRequest(
     ];
 
     // Prepare AI run parameters with GPT-OSS reasoning support
-    const aiParams: any = {
+    const aiParams: AIRunParameters = {
       messages,
       max_tokens: 512,
       temperature: 0.7,
@@ -68,7 +60,7 @@ export async function handleSimpleChatbotRequest(
     }
 
     // Call Cloudflare AI
-    const aiResponse = await env.AI.run(model as any, aiParams) as AIChatResponse;
+    const aiResponse = await env.AI.run(model, aiParams) as AIChatResponse;
 
     if (!aiResponse || !aiResponse.response) {
       console.error('AI response missing or invalid:', aiResponse);

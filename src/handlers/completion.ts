@@ -1,4 +1,4 @@
-import { Env, CompletionRequest, CompletionResponse, ApiError, HTTP_STATUS, DEFAULT_MODELS } from '../types';
+import { Env, CompletionRequest, CompletionResponse, ApiError, HTTP_STATUS, DEFAULT_MODELS, AIRunParameters, AIChatResponse } from '../types';
 import { generateId } from '../utils/logger';
 
 export async function handleCompletionRequest(
@@ -25,17 +25,9 @@ export async function handleCompletionRequest(
       },
     ];
 
-    interface AICompletionModelResponse {
-      response: string;
-      usage?: {
-        prompt_tokens: number;
-        completion_tokens: number;
-        total_tokens: number;
-      };
-    }
 
     // Prepare AI run parameters with GPT-OSS reasoning support
-    const aiParams: any = {
+    const aiParams: AIRunParameters = {
       messages,
       max_tokens: maxTokens,
       temperature,
@@ -46,7 +38,7 @@ export async function handleCompletionRequest(
       aiParams.reasoning = { effort: reasoningEffort };
     }
 
-    const aiResponse = await env.AI.run(model as any, aiParams) as AICompletionModelResponse;
+    const aiResponse = await env.AI.run(model, aiParams) as AIChatResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';

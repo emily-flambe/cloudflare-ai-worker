@@ -44,4 +44,4 @@ coverage/
 
 # Temporary folders
 tmp/
-temp/
+temp/.cache/

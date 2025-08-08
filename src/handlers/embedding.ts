@@ -1,4 +1,4 @@
-import { Env, EmbeddingRequest, EmbeddingResponse, ApiError, HTTP_STATUS, DEFAULT_MODELS } from '../types';
+import { Env, EmbeddingRequest, EmbeddingResponse, ApiError, HTTP_STATUS, DEFAULT_MODELS, AIRunParameters, AIEmbeddingResponse } from '../types';
 
 export async function handleEmbeddingRequest(
   request: Request,
@@ -18,13 +18,11 @@ export async function handleEmbeddingRequest(
     const embeddings = await Promise.all(
       inputs.map(async (input, index) => {
         try {
-          interface AIEmbeddingModelResponse {
-            data: number[];
-          }
-
-          const aiResponse = await env.AI.run(model as any, {
+          const aiParams: AIRunParameters = {
             text: input,
-          }) as AIEmbeddingModelResponse;
+          };
+
+          const aiResponse = await env.AI.run(model, aiParams) as AIEmbeddingResponse;
 
           if (!aiResponse || !aiResponse.data || !Array.isArray(aiResponse.data)) {
             const errorMessage = 'Invalid embedding response from AI model';

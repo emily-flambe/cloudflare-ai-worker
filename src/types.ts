@@ -20,6 +20,35 @@ export interface ChatMessage {
   content: string;
 }
 
+// AI Runtime parameters and responses
+export interface AIRunParameters {
+  messages?: ChatMessage[];
+  prompt?: string;
+  text?: string | string[];
+  max_tokens?: number;
+  temperature?: number;
+  reasoning?: {
+    effort: ReasoningEffortLevel;
+  };
+}
+
+export interface AIChatResponse {
+  response: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface AIEmbeddingResponse {
+  data: number[];
+  usage?: {
+    prompt_tokens: number;
+    total_tokens: number;
+  };
+}
+
 // GPT-OSS specific types
 export type ReasoningEffortLevel = 'low' | 'medium' | 'high';
 

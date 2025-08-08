@@ -1,4 +1,4 @@
-import { Env, SurveyNormalizationRequest, SurveyNormalizationResponse, NormalizationSuggestion, ApiError, HTTP_STATUS, DEFAULT_MODELS } from '../types';
+import { Env, SurveyNormalizationRequest, SurveyNormalizationResponse, NormalizationSuggestion, ApiError, HTTP_STATUS, DEFAULT_MODELS, AIRunParameters, AIChatResponse } from '../types';
 import { generateId } from '../utils/logger';
 
 export async function handleSurveyNormalizationRequest(
@@ -29,17 +29,9 @@ export async function handleSurveyNormalizationRequest(
       },
     ];
 
-    interface AISurveyModelResponse {
-      response: string;
-      usage?: {
-        prompt_tokens: number;
-        completion_tokens: number;
-        total_tokens: number;
-      };
-    }
 
     // Prepare AI run parameters with GPT-OSS reasoning support
-    const aiParams: any = {
+    const aiParams: AIRunParameters = {
       messages,
       max_tokens: 1024,
       temperature: 0.3, // Lower temperature for more consistent normalization
@@ -50,7 +42,7 @@ export async function handleSurveyNormalizationRequest(
       aiParams.reasoning = { effort: 'high' };
     }
 
-    const aiResponse = await env.AI.run(model as any, aiParams) as AISurveyModelResponse;
+    const aiResponse = await env.AI.run(model, aiParams) as AIChatResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';
