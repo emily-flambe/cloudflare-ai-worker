@@ -1,0 +1,6 @@
+name = "ai-worker"
+main = "src/index.ts"
+compatibility_date = "2025-08-08"
+
+[ai]
+binding = "AI"
