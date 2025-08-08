@@ -20,12 +20,44 @@ export interface ChatMessage {
   content: string;
 }
 
+// GPT-OSS specific types
+export type ReasoningEffortLevel = 'low' | 'medium' | 'high';
+
+export interface GPTOSSModelInfo {
+  id: string;
+  total_parameters: string;
+  active_parameters_per_token: string;
+  description: string;
+}
+
+// GPT-OSS models - using existing models as placeholders until GPT-OSS is available
+export const GPT_OSS_MODELS = {
+  PRODUCTION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', // Placeholder for @cf/openai/gpt-oss-120b
+  EDGE: '@cf/meta/llama-3.1-8b-instruct', // Placeholder for @cf/openai/gpt-oss-20b
+} as const;
+
+export const GPT_OSS_MODEL_INFO: Record<string, GPTOSSModelInfo> = {
+  [GPT_OSS_MODELS.PRODUCTION]: {
+    id: '@cf/openai/gpt-oss-120b', // Target GPT-OSS model
+    total_parameters: '117B',
+    active_parameters_per_token: '5.1B',
+    description: 'Production GPT-OSS model with 117B total parameters and 5.1B active per token (currently using Llama 3.3 70B as placeholder)'
+  },
+  [GPT_OSS_MODELS.EDGE]: {
+    id: '@cf/openai/gpt-oss-20b', // Target GPT-OSS model
+    total_parameters: '21B',
+    active_parameters_per_token: '3.6B',
+    description: 'Edge GPT-OSS model with 21B total parameters and 3.6B active per token (currently using Llama 3.1 8B as placeholder)'
+  }
+} as const;
+
 export interface ChatRequest {
   messages: ChatMessage[];
   model?: string;
   max_tokens?: number;
   temperature?: number;
   stream?: boolean;
+  reasoning_effort?: ReasoningEffortLevel;
 }
 
 export interface ChatResponse {
@@ -51,6 +83,7 @@ export interface CompletionRequest {
   max_tokens?: number;
   temperature?: number;
   stream?: boolean;
+  reasoning_effort?: ReasoningEffortLevel;
 }
 
 export interface CompletionResponse {
@@ -160,8 +193,8 @@ export interface CacheOptions {
 
 export const MODELS = {
   CHAT: {
-    LLAMA_3_1_8B: '@cf/meta/llama-3.1-8b-instruct',
-    MISTRAL_7B: '@cf/mistral/mistral-7b-instruct-v0.1',
+    GPT_OSS_120B: GPT_OSS_MODELS.PRODUCTION,
+    GPT_OSS_20B: GPT_OSS_MODELS.EDGE,
   },
   EMBEDDING: {
     BGE_BASE: '@cf/baai/bge-base-en-v1.5',
@@ -169,8 +202,8 @@ export const MODELS = {
 } as const;
 
 export const DEFAULT_MODELS = {
-  CHAT: MODELS.CHAT.LLAMA_3_1_8B,
-  COMPLETION: MODELS.CHAT.LLAMA_3_1_8B,
+  CHAT: MODELS.CHAT.GPT_OSS_120B,
+  COMPLETION: MODELS.CHAT.GPT_OSS_120B,
   EMBEDDING: MODELS.EMBEDDING.BGE_BASE,
 } as const;
 

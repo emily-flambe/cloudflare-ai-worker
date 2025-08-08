@@ -22,7 +22,7 @@ export async function handleEmbeddingRequest(
             data: number[];
           }
 
-          const aiResponse = await env.AI.run(model, {
+          const aiResponse = await env.AI.run(model as any, {
             text: input,
           }) as AIEmbeddingModelResponse;
 

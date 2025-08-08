@@ -16,6 +16,7 @@ export async function handleChatRequest(
     const model = body.model || DEFAULT_MODELS.CHAT;
     const maxTokens = body.max_tokens || 1024;
     const temperature = body.temperature || 0.7;
+    const reasoningEffort = body.reasoning_effort || 'medium';
 
     const messages = body.messages.map(msg => ({
       role: msg.role,
@@ -24,13 +25,26 @@ export async function handleChatRequest(
 
     interface AIChatModelResponse {
       response: string;
+      usage?: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      };
     }
 
-    const aiResponse = await env.AI.run(model, {
+    // Prepare AI run parameters with GPT-OSS reasoning support
+    const aiParams: any = {
       messages,
       max_tokens: maxTokens,
       temperature,
-    }) as AIChatModelResponse;
+    };
+
+    // Add reasoning parameter for GPT-OSS models
+    if (model.includes('gpt-oss')) {
+      aiParams.reasoning = { effort: reasoningEffort };
+    }
+
+    const aiResponse = await env.AI.run(model as any, aiParams) as AIChatModelResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';
@@ -111,6 +125,10 @@ function validateChatRequest(body: ChatRequest): string | null {
 
   if (body.temperature && (body.temperature < 0 || body.temperature > 2)) {
     return 'temperature must be between 0 and 2';
+  }
+
+  if (body.reasoning_effort && !['low', 'medium', 'high'].includes(body.reasoning_effort)) {
+    return 'reasoning_effort must be one of: low, medium, high';
   }
 
   return null;

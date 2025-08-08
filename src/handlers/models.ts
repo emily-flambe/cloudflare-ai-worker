@@ -7,10 +7,10 @@ export async function handleModelsRequest(
   try {
     const models: ModelInfo[] = [
       {
-        id: MODELS.CHAT.LLAMA_3_1_8B,
+        id: MODELS.CHAT.GPT_OSS_120B,
         object: 'model',
         created: 1677610602,
-        owned_by: 'cloudflare',
+        owned_by: 'openai',
         permission: [
           {
             id: 'modelperm-default',
@@ -27,14 +27,14 @@ export async function handleModelsRequest(
             is_blocking: false,
           },
         ],
-        root: MODELS.CHAT.LLAMA_3_1_8B,
+        root: MODELS.CHAT.GPT_OSS_120B,
         parent: null,
       },
       {
-        id: MODELS.CHAT.MISTRAL_7B,
+        id: MODELS.CHAT.GPT_OSS_20B,
         object: 'model',
         created: 1677610602,
-        owned_by: 'cloudflare',
+        owned_by: 'openai',
         permission: [
           {
             id: 'modelperm-default',
@@ -51,7 +51,7 @@ export async function handleModelsRequest(
             is_blocking: false,
           },
         ],
-        root: MODELS.CHAT.MISTRAL_7B,
+        root: MODELS.CHAT.GPT_OSS_20B,
         parent: null,
       },
       {
@@ -113,8 +113,8 @@ export async function handleModelsRequest(
 
 export function getAvailableModels() {
   return {
-    chat: [MODELS.CHAT.LLAMA_3_1_8B, MODELS.CHAT.MISTRAL_7B],
-    completion: [MODELS.CHAT.LLAMA_3_1_8B, MODELS.CHAT.MISTRAL_7B],
+    chat: [MODELS.CHAT.GPT_OSS_120B, MODELS.CHAT.GPT_OSS_20B],
+    completion: [MODELS.CHAT.GPT_OSS_120B, MODELS.CHAT.GPT_OSS_20B],
     embedding: [MODELS.EMBEDDING.BGE_BASE],
   };
 }

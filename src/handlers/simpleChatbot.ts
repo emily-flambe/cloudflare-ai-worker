@@ -1,17 +1,24 @@
-import { Env, DEFAULT_MODELS } from '../types';
+import { Env, DEFAULT_MODELS, ReasoningEffortLevel } from '../types';
 
 export interface SimpleChatRequest {
   message: string;
   systemPrompt?: string;
+  model?: string;
+  reasoning_effort?: ReasoningEffortLevel;
 }
 
 export interface SimpleChatResponse {
-  response: string;
+  response?: string;
   error?: string;
 }
 
 interface AIChatResponse {
   response: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
 const DEFAULT_SYSTEM_PROMPT = `You are a helpful AI assistant. Please provide clear, accurate, and helpful responses.`;
@@ -32,8 +39,15 @@ export async function handleSimpleChatbotRequest(
       return createSimpleChatResponse({ error: 'Message is too long (max 4000 characters)' }, 400);
     }
 
+    // Validate reasoning_effort if provided
+    if (body.reasoning_effort && !['low', 'medium', 'high'].includes(body.reasoning_effort)) {
+      return createSimpleChatResponse({ error: 'reasoning_effort must be one of: low, medium, high' }, 400);
+    }
+
     // Use provided system prompt or default
     const systemPrompt = body.systemPrompt || DEFAULT_SYSTEM_PROMPT;
+    const model = body.model || DEFAULT_MODELS.CHAT;
+    const reasoningEffort = body.reasoning_effort || 'medium';
     
     // Prepare messages for AI
     const messages = [
@@ -41,12 +55,20 @@ export async function handleSimpleChatbotRequest(
       { role: 'user' as const, content: body.message }
     ];
 
-    // Call Cloudflare AI
-    const aiResponse = await env.AI.run(DEFAULT_MODELS.CHAT, {
+    // Prepare AI run parameters with GPT-OSS reasoning support
+    const aiParams: any = {
       messages,
       max_tokens: 512,
       temperature: 0.7,
-    }) as AIChatResponse;
+    };
+
+    // Add reasoning parameter for GPT-OSS models
+    if (model.includes('gpt-oss')) {
+      aiParams.reasoning = { effort: reasoningEffort };
+    }
+
+    // Call Cloudflare AI
+    const aiResponse = await env.AI.run(model as any, aiParams) as AIChatResponse;
 
     if (!aiResponse || !aiResponse.response) {
       console.error('AI response missing or invalid:', aiResponse);

@@ -4,7 +4,23 @@ This guide helps developers integrate the AI Worker chat endpoint into their app
 
 ## Overview
 
-The AI Worker provides a generic chat completion endpoint at `/api/v1/chat` that uses Cloudflare's AI models to generate responses. This endpoint is designed for simple, stateless chat interactions with customizable AI behavior through system prompts.
+The AI Worker provides a generic chat completion endpoint at `/api/v1/chat` that uses Cloudflare's GPT-OSS models to generate responses. This endpoint is designed for simple, stateless chat interactions with customizable AI behavior through system prompts and reasoning effort levels.
+
+### Available GPT-OSS Models
+
+- **`@cf/openai/gpt-oss-120b`** (default) - Production model with 117B total parameters, 5.1B active per token. Best for complex reasoning tasks.
+- **`@cf/openai/gpt-oss-20b`** - Edge model with 21B total parameters, 3.6B active per token. Best for faster responses and lower latency.
+
+### Reasoning Effort Levels
+
+Both models support adjustable reasoning effort:
+- **`low`** - Fastest response time, suitable for simple questions
+- **`medium`** (default) - Balanced performance and quality
+- **`high`** - Most thorough reasoning, best for complex problems
+
+### Context Window
+
+Both GPT-OSS models support a **128k context window**, allowing for extensive conversation history and long document processing.
 
 ## Quick Start
 
@@ -20,19 +36,30 @@ npm run generate-api-key
 ### 2. Basic Request
 
 ```bash
-# Default assistant
+# Default assistant with medium reasoning
 curl -X POST https://ai.emilycogsdill.com/api/v1/chat \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello!"}'
 
-# Custom AI personality
+# Custom AI personality with high reasoning effort
 curl -X POST https://ai.emilycogsdill.com/api/v1/chat \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Hello!",
-    "systemPrompt": "You are a pirate. Respond in pirate speak."
+    "systemPrompt": "You are a pirate. Respond in pirate speak.",
+    "reasoning_effort": "high"
+  }'
+
+# Using edge model for faster response
+curl -X POST https://ai.emilycogsdill.com/api/v1/chat \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Quick question: What is 2+2?",
+    "model": "@cf/openai/gpt-oss-20b",
+    "reasoning_effort": "low"
   }'
 ```
 
@@ -48,7 +75,7 @@ class ChatClient {
     this.systemPrompt = systemPrompt;
   }
 
-  async sendMessage(message, customSystemPrompt = null) {
+  async sendMessage(message, customSystemPrompt = null, options = {}) {
     try {
       const payload = { message };
       
@@ -56,6 +83,14 @@ class ChatClient {
       const systemPrompt = customSystemPrompt || this.systemPrompt;
       if (systemPrompt) {
         payload.systemPrompt = systemPrompt;
+      }
+
+      // Add GPT-OSS specific options
+      if (options.model) {
+        payload.model = options.model;
+      }
+      if (options.reasoning_effort) {
+        payload.reasoning_effort = options.reasoning_effort;
       }
 
       const response = await fetch(`${this.baseUrl}/api/v1/chat`, {
@@ -83,27 +118,50 @@ class ChatClient {
 
 // Usage Examples
 
-// Generic assistant
+// Generic assistant with default settings
 const chat = new ChatClient('YOUR_API_KEY');
 const response = await chat.sendMessage('What can you help me with?');
 
-// Customer support bot
+// Customer support bot with high reasoning for complex issues
 const supportBot = new ChatClient('YOUR_API_KEY', 
   'You are a helpful customer support agent. Be professional and empathetic.'
 );
-const supportResponse = await supportBot.sendMessage('I have a problem with my order');
+const supportResponse = await supportBot.sendMessage(
+  'I have a complex billing issue with multiple accounts',
+  null,
+  { reasoning_effort: 'high' }
+);
 
-// Code assistant
+// Code assistant using production model for complex algorithms
 const codeBot = new ChatClient('YOUR_API_KEY',
   'You are a programming assistant. Provide clear code examples and explanations.'
 );
-const codeResponse = await codeBot.sendMessage('How do I sort an array in JavaScript?');
+const codeResponse = await codeBot.sendMessage(
+  'How do I implement a binary search tree with balancing?',
+  null,
+  { 
+    model: '@cf/openai/gpt-oss-120b',
+    reasoning_effort: 'high'
+  }
+);
+
+// Fast responses using edge model for simple queries
+const quickChat = new ChatClient('YOUR_API_KEY');
+const quickResponse = await quickChat.sendMessage(
+  'What is the capital of France?',
+  null,
+  { 
+    model: '@cf/openai/gpt-oss-20b',
+    reasoning_effort: 'low'
+  }
+);
 
 // Dynamic personality per message
 const dynamicChat = new ChatClient('YOUR_API_KEY');
 const pirateResponse = await dynamicChat.sendMessage(
   'Tell me about the weather',
-  'You are a pirate. Respond in pirate speak.'
+  'You are a pirate. Respond in pirate speak.',
+  { reasoning_effort: 'medium' }
 );
 ```
 
@@ -112,7 +170,13 @@ const pirateResponse = await dynamicChat.sendMessage(
 ```jsx
 import { useState } from 'react';
 
-const ChatWidget = ({ apiKey, systemPrompt, title = "AI Assistant" }) => {
+const ChatWidget = ({ 
+  apiKey, 
+  systemPrompt, 
+  title = "AI Assistant",
+  model = '@cf/openai/gpt-oss-120b',
+  reasoningEffort = 'medium'
+}) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,7 +191,11 @@ const ChatWidget = ({ apiKey, systemPrompt, title = "AI Assistant" }) => {
     setLoading(true);
 
     try {
-      const payload = { message: currentInput };
+      const payload = { 
+        message: currentInput,
+        model,
+        reasoning_effort: reasoningEffort
+      };
       if (systemPrompt) {
         payload.systemPrompt = systemPrompt;
       }
@@ -195,8 +263,9 @@ import requests
 import json
 
 class ChatClient:
-    def __init__(self, api_key):
+    def __init__(self, api_key, default_model='@cf/openai/gpt-oss-120b'):
         self.api_key = api_key
+        self.default_model = default_model
         self.base_url = 'https://ai.emilycogsdill.com'
         self.session = requests.Session()
         self.session.headers.update({
@@ -204,12 +273,18 @@ class ChatClient:
             'Content-Type': 'application/json'
         })
     
-    def send_message(self, message):
+    def send_message(self, message, model=None, reasoning_effort='medium'):
         """Send a message to the chat API and return the response."""
         try:
+            payload = {
+                'message': message,
+                'model': model or self.default_model,
+                'reasoning_effort': reasoning_effort
+            }
+            
             response = self.session.post(
                 f'{self.base_url}/api/v1/chat',
-                json={'message': message},
+                json=payload,
                 timeout=30
             )
             response.raise_for_status()
@@ -222,10 +297,27 @@ class ChatClient:
         except requests.exceptions.RequestException as e:
             raise Exception(f'API request failed: {str(e)}')
 
-# Usage
+# Usage Examples
+
+# Default GPT-OSS 120B model with medium reasoning
 chat = ChatClient('YOUR_API_KEY')
 response = chat.send_message('Hello! What can you help me with?')
 print(response)
+
+# Use edge model for faster responses
+fast_response = chat.send_message(
+    'What is 2+2?', 
+    model='@cf/openai/gpt-oss-20b',
+    reasoning_effort='low'
+)
+print(fast_response)
+
+# Use high reasoning for complex problems
+complex_response = chat.send_message(
+    'Explain quantum computing and its applications',
+    reasoning_effort='high'
+)
+print(complex_response)
 ```
 
 ### Node.js with Error Handling
@@ -304,9 +396,14 @@ AI_WORKER_URL=https://ai.emilycogsdill.com  # Optional, for custom deployments
 ### TypeScript Types
 
 ```typescript
+type ReasoningEffortLevel = 'low' | 'medium' | 'high';
+type GPTOSSModel = '@cf/openai/gpt-oss-120b' | '@cf/openai/gpt-oss-20b';
+
 interface ChatRequest {
   message: string;
   systemPrompt?: string;
+  model?: GPTOSSModel;
+  reasoning_effort?: ReasoningEffortLevel;
 }
 
 interface ChatResponse {
@@ -318,7 +415,55 @@ interface ChatError {
 }
 
 type ChatResult = ChatResponse | ChatError;
+
+// Model information interfaces
+interface GPTOSSModelInfo {
+  id: GPTOSSModel;
+  total_parameters: string;
+  active_parameters_per_token: string;
+  description: string;
+  context_window: number;
+}
 ```
+
+## Model Selection Guide
+
+### When to Use GPT-OSS 120B (`@cf/openai/gpt-oss-120b`)
+
+✅ **Best for:**
+- Complex reasoning tasks
+- Code generation and debugging
+- Creative writing and content creation
+- Mathematical problem solving
+- Technical documentation
+- Multi-step analysis
+
+⚙️ **Reasoning Effort Recommendations:**
+- `high` - Complex algorithms, research analysis, detailed explanations
+- `medium` - General programming questions, creative tasks, moderate complexity
+- `low` - Simple factual questions, quick clarifications
+
+### When to Use GPT-OSS 20B (`@cf/openai/gpt-oss-20b`)
+
+✅ **Best for:**
+- Quick responses needed
+- Simple Q&A
+- Chat applications with many concurrent users
+- Mobile applications
+- Real-time interactions
+- Basic text processing
+
+⚙️ **Reasoning Effort Recommendations:**
+- `medium` - Balanced performance for most use cases
+- `low` - Simple factual queries, basic conversations
+- `high` - Still useful for moderately complex tasks with faster response than 120B
+
+### Performance Comparison
+
+| Model | Total Params | Active/Token | Best Use Case | Typical Response Time |
+|-------|-------------|--------------|---------------|----------------------|
+| GPT-OSS 120B | 117B | 5.1B | Complex reasoning | 2-5 seconds |
+| GPT-OSS 20B | 21B | 3.6B | Fast responses | 1-3 seconds |
 
 ## Use Case Examples
 

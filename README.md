@@ -1,6 +1,6 @@
 # Cloudflare AI Worker API
 
-A production-ready AI API service built with Cloudflare Workers that provides OpenAI-compatible endpoints for chat completions, text completions, embeddings, and more.
+A production-ready AI API service built with Cloudflare Workers that provides OpenAI-compatible endpoints powered by GPT-OSS models for chat completions, text completions, embeddings, and more.
 
 ## Features
 
@@ -127,7 +127,12 @@ curl -H "Authorization: Bearer invalid-key" \
 curl -X POST https://ai.emilycogsdill.com/api/chat \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "Hello!"}], "max_tokens": 50}'
+  -d '{
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "model": "@cf/openai/gpt-oss-120b",
+    "reasoning_effort": "medium",
+    "max_tokens": 50
+  }'
 ```
 
 Replace `your-api-key` with your actual API key from Cloudflare Secrets Store.
@@ -169,7 +174,8 @@ Content-Type: application/json
     {"role": "system", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello, how are you?"}
   ],
-  "model": "@cf/meta/llama-3.1-8b-instruct",
+  "model": "@cf/openai/gpt-oss-120b",
+  "reasoning_effort": "medium",
   "max_tokens": 1024,
   "temperature": 0.7
 }
@@ -238,7 +244,7 @@ Content-Type: application/json
 const API_BASE = 'https://ai.emilycogsdill.com';
 const API_KEY = 'your-api-key';
 
-async function chatCompletion(messages) {
+async function chatCompletion(messages, reasoningEffort = 'medium') {
   const response = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
     headers: {
@@ -247,6 +253,8 @@ async function chatCompletion(messages) {
     },
     body: JSON.stringify({
       messages,
+      model: '@cf/openai/gpt-oss-120b',
+      reasoning_effort: reasoningEffort,
       max_tokens: 1024,
       temperature: 0.7,
     }),
@@ -270,7 +278,7 @@ import requests
 API_BASE = 'https://ai.emilycogsdill.com'
 API_KEY = 'your-api-key'
 
-def chat_completion(messages):
+def chat_completion(messages, reasoning_effort='medium'):
     response = requests.post(
         f'{API_BASE}/api/chat',
         headers={
@@ -279,6 +287,8 @@ def chat_completion(messages):
         },
         json={
             'messages': messages,
+            'model': '@cf/openai/gpt-oss-120b',
+            'reasoning_effort': reasoning_effort,
             'max_tokens': 1024,
             'temperature': 0.7,
         }
@@ -302,6 +312,8 @@ curl -X POST https://ai.emilycogsdill.com/api/chat \
     "messages": [
       {"role": "user", "content": "Hello!"}
     ],
+    "model": "@cf/openai/gpt-oss-120b",
+    "reasoning_effort": "medium",
     "max_tokens": 1024,
     "temperature": 0.7
   }'
@@ -309,9 +321,14 @@ curl -X POST https://ai.emilycogsdill.com/api/chat \
 
 ## Available Models
 
-### Chat & Completion Models
-- `@cf/meta/llama-3.1-8b-instruct` (default)
-- `@cf/mistral/mistral-7b-instruct-v0.1`
+### GPT-OSS Chat & Completion Models
+- `@cf/openai/gpt-oss-120b` (default) - Production model with 117B total parameters, 5.1B active per token, best for complex reasoning
+- `@cf/openai/gpt-oss-20b` - Edge model with 21B total parameters, 3.6B active per token, best for lower latency
+
+Both GPT-OSS models support:
+- **128k context window** for long conversations
+- **Reasoning effort levels**: "low", "medium" (default), "high"
+- **Advanced reasoning capabilities** through mixture of experts architecture
 
 ### Embedding Models
 - `@cf/baai/bge-base-en-v1.5` (default)

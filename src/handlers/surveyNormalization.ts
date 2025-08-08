@@ -13,7 +13,7 @@ export async function handleSurveyNormalizationRequest(
       return createErrorResponse(validationError, HTTP_STATUS.BAD_REQUEST);
     }
 
-    const model = DEFAULT_MODELS.CHAT; // @cf/meta/llama-3.1-8b-instruct
+    const model = DEFAULT_MODELS.CHAT; // GPT-OSS 120B (currently using Llama 3.3 70B placeholder)
     
     const systemPrompt = createSystemPrompt(body.category, body.context);
     const userPrompt = createUserPrompt(body.question);
@@ -31,13 +31,26 @@ export async function handleSurveyNormalizationRequest(
 
     interface AISurveyModelResponse {
       response: string;
+      usage?: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      };
     }
 
-    const aiResponse = await env.AI.run(model, {
+    // Prepare AI run parameters with GPT-OSS reasoning support
+    const aiParams: any = {
       messages,
       max_tokens: 1024,
       temperature: 0.3, // Lower temperature for more consistent normalization
-    }) as AISurveyModelResponse;
+    };
+
+    // Add reasoning parameter for GPT-OSS models - use 'high' for survey normalization for best accuracy
+    if (model.includes('gpt-oss')) {
+      aiParams.reasoning = { effort: 'high' };
+    }
+
+    const aiResponse = await env.AI.run(model as any, aiParams) as AISurveyModelResponse;
 
     if (!aiResponse || !aiResponse.response) {
       const errorMessage = 'Failed to generate response from AI model';
