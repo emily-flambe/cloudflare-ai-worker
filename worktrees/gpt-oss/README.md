@@ -38,3 +38,6 @@ npm run dev
 ```bash
 npm run deploy
 ```
+
+## Preview Deployments
+Cloudflare automatically creates preview deployments for pull requests.
