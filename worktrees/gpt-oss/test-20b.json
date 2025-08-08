@@ -1,0 +1,7 @@
+{
+  "input": [
+    {"role": "user", "content": "Write a haiku about programming"}
+  ],
+  "model": "@cf/openai/gpt-oss-20b",
+  "reasoning": {"effort": "low"}
+}

@@ -1,0 +1,7 @@
+{
+  "input": [
+    {"role": "user", "content": "Hello! What model are you?"}
+  ],
+  "model": "@cf/openai/gpt-oss-120b",
+  "reasoning": {"effort": "medium"}
+}
