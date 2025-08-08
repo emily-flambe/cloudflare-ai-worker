@@ -30,24 +30,24 @@ export interface GPTOSSModelInfo {
   description: string;
 }
 
-// GPT-OSS models - using existing models as placeholders until GPT-OSS is available
+// GPT-OSS models - now available on Cloudflare Workers AI
 export const GPT_OSS_MODELS = {
-  PRODUCTION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', // Placeholder for @cf/openai/gpt-oss-120b
-  EDGE: '@cf/meta/llama-3.1-8b-instruct', // Placeholder for @cf/openai/gpt-oss-20b
+  PRODUCTION: '@cf/openai/gpt-oss-120b', // GPT-OSS 120B production model
+  EDGE: '@cf/openai/gpt-oss-20b', // GPT-OSS 20B edge model
 } as const;
 
 export const GPT_OSS_MODEL_INFO: Record<string, GPTOSSModelInfo> = {
   [GPT_OSS_MODELS.PRODUCTION]: {
-    id: '@cf/openai/gpt-oss-120b', // Target GPT-OSS model
+    id: '@cf/openai/gpt-oss-120b',
     total_parameters: '117B',
     active_parameters_per_token: '5.1B',
-    description: 'Production GPT-OSS model with 117B total parameters and 5.1B active per token (currently using Llama 3.3 70B as placeholder)'
+    description: 'Production GPT-OSS model with 117B total parameters and 5.1B active per token, optimized for complex reasoning and high-quality responses'
   },
   [GPT_OSS_MODELS.EDGE]: {
-    id: '@cf/openai/gpt-oss-20b', // Target GPT-OSS model
+    id: '@cf/openai/gpt-oss-20b',
     total_parameters: '21B',
     active_parameters_per_token: '3.6B',
-    description: 'Edge GPT-OSS model with 21B total parameters and 3.6B active per token (currently using Llama 3.1 8B as placeholder)'
+    description: 'Edge GPT-OSS model with 21B total parameters and 3.6B active per token, optimized for lower latency and edge deployments'
   }
 } as const;
 
