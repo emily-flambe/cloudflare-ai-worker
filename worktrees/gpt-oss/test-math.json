@@ -1,0 +1,7 @@
+{
+  "input": [
+    {"role": "user", "content": "What is 127 * 89? Please show your work."}
+  ],
+  "model": "@cf/openai/gpt-oss-120b",
+  "reasoning": {"effort": "high"}
+}
