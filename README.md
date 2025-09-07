@@ -1,117 +1,50 @@
 # Cloudflare AI Worker - GPT-OSS
 
-A production-ready Cloudflare Worker that provides access to OpenAI's GPT-OSS models (`@cf/openai/gpt-oss-120b` and `@cf/openai/gpt-oss-20b`) through REST API endpoints.
+Production-ready Cloudflare Worker providing access to OpenAI's GPT-OSS models.
 
 ## Features
 
-- 🤖 **OpenAI GPT-OSS Models**: Access to both 120B and 20B parameter models
-- 📡 **Multiple API Formats**: Supports both Responses API and OpenAI-compatible formats
-- 🔧 **Code Interpreter**: Built-in code execution capabilities
-- 🌐 **CORS Enabled**: Cross-origin requests supported
-- ⚡ **Fast & Scalable**: Powered by Cloudflare's global edge network
-- 🔒 **Secure**: No API keys required for basic usage
+- Access to GPT-OSS models (120B and 20B parameters)
+- Multiple API formats (Responses API and OpenAI-compatible)
+- Conversation history support
+- Code interpreter capabilities
+- CORS enabled
 
-## API Endpoints
+## Quick Start
 
-### Health Check
+### Basic Usage
 ```bash
-GET /health
+curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"input": "What is quantum computing?"}'
 ```
 
-Returns service status and available models.
-
-### List Models
+### With Conversation History
 ```bash
-GET /api/v1/models
-```
-
-Returns available GPT-OSS models with pricing information.
-
-### Chat (Responses API Format)
-```bash
-POST /api/v1/chat
-Content-Type: application/json
-
-{
-  \"model\": \"@cf/openai/gpt-oss-120b\",
-  \"input\": \"What are the benefits of open-source models?\",
-  \"reasoning\": {\"effort\": \"medium\"},
-  \"instructions\": \"You are a helpful AI assistant.\"
-}
-```
-
-### Chat (OpenAI-Compatible Format)
-```bash
-POST /api/v1/chat/completions
-Content-Type: application/json
-
-{
-  \"model\": \"@cf/openai/gpt-oss-120b\",
-  \"messages\": [
-    {\"role\": \"system\", \"content\": \"You are a helpful assistant.\"},
-    {\"role\": \"user\", \"content\": \"Hello!\"}
-  ]
-}
-```
-
-### Code Interpreter
-```bash
-POST /api/v1/code
-Content-Type: application/json
-
-{
-  \"input\": \"Calculate the sum of prime numbers from 1 to 100\",
-  \"model\": \"@cf/openai/gpt-oss-120b\"
-}
-```
-
-## Usage Examples
-
-### Basic Chat
-```bash
-curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \\
-  -H \"Content-Type: application/json\" \\
+curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \
+  -H "Content-Type: application/json" \
   -d '{
-    \"input\": \"Explain quantum computing in simple terms\"
-  }'
-```
-
-### Chat with Custom Instructions
-```bash
-curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \\
-  -H \"Content-Type: application/json\" \\
-  -d '{
-    \"input\": \"What is machine learning?\",
-    \"instructions\": \"You are an expert data scientist. Explain concepts clearly with examples.\",
-    \"reasoning\": {\"effort\": \"high\"}
+    "input": "What was my previous question?",
+    "conversationHistory": [
+      {"role": "user", "content": "What is quantum computing?"},
+      {"role": "assistant", "content": "Quantum computing uses quantum mechanics..."}
+    ]
   }'
 ```
 
 ### OpenAI-Compatible Format
 ```bash
-curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat/completions \\
-  -H \"Content-Type: application/json\" \\
+curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
   -d '{
-    \"messages\": [
-      {\"role\": \"system\", \"content\": \"You are a helpful assistant.\"},
-      {\"role\": \"user\", \"content\": \"Write a Python function to calculate fibonacci numbers\"}
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant"},
+      {"role": "user", "content": "Hello!"}
     ]
   }'
 ```
 
-### Code Interpreter
-```bash
-curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/code \\
-  -H \"Content-Type: application/json\" \\
-  -d '{
-    \"input\": \"Create a Python script that analyzes this dataset: [1,2,3,4,5,6,7,8,9,10] and calculates mean, median, and standard deviation\"
-  }'
-```
-
-### List Available Models
-```bash
-curl https://ai-worker.emily-cogsdill.workers.dev/api/v1/models
-```
+For more examples including code interpreter, custom instructions, and error handling, see [.project/docs/example_curls.md](.project/docs/example_curls.md).
 
 ## Available Models
 
