@@ -2,7 +2,8 @@ import {
   ConversationMessage, 
   validateAndTruncateHistory, 
   buildEnhancedInstructions,
-  formatConversationHistory 
+  formatConversationHistory,
+  getCharacterLimitForModel,
 } from './conversation-utils';
 
 interface Env {
@@ -24,13 +25,7 @@ interface ResponsesAPIRequest {
   conversationHistory?: ConversationMessage[];
 }
 
-interface OpenAICompatibleRequest {
-  model?: string;
-  messages: ChatMessage[];
-  max_tokens?: number;
-  temperature?: number;
-  stream?: boolean;
-}
+
 
 function addCorsHeaders(response: Response): Response {
   const newHeaders = new Headers(response.headers);
@@ -65,7 +60,6 @@ export default {
           },
           endpoints: {
             '/api/v1/chat': 'Responses API format',
-            '/api/v1/chat/completions': 'OpenAI-compatible format (coming soon)',
             '/api/v1/models': 'List available models'
           },
           timestamp: new Date().toISOString()
@@ -133,7 +127,30 @@ export default {
         
         if (body.conversationHistory && body.conversationHistory.length > 0) {
           // Validate and truncate history to prevent token overflow
-          const validatedHistory = validateAndTruncateHistory(body.conversationHistory, 90000);
+          const characterLimit = getCharacterLimitForModel(model);
+          const truncationResult = validateAndTruncateHistory(body.conversationHistory, characterLimit);
+          
+          // Handle truncation warning
+          if (truncationResult.wasTruncated) {
+            const truncationWarning = `Conversation history was truncated: ${truncationResult.originalLength} messages reduced to ${truncationResult.truncatedLength} messages`;
+            console.warn(truncationWarning);
+            
+            // Return a response with truncation warning in metadata
+            const warningResponse = {
+              warning: 'Conversation history exceeded token limits and was truncated',
+              truncationDetails: {
+                originalMessages: truncationResult.originalLength,
+                truncatedToMessages: truncationResult.truncatedLength,
+                characterLimit: characterLimit,
+                recommendation: 'Consider summarizing or reducing conversation history to maintain full context'
+              }
+            };
+            
+            // Add warning to the AI response metadata (will be handled later)
+            (request as any)._truncationWarning = warningResponse;
+          }
+          
+          const validatedHistory = truncationResult.history;
           
           // Build enhanced instructions with conversation context
           enhancedInstructions = buildEnhancedInstructions(body.instructions, validatedHistory);
@@ -148,105 +165,22 @@ export default {
           reasoning: body.reasoning || { effort: 'medium' }
         });
 
-        const response = Response.json(aiResponse);
+        // Add truncation warning to response if applicable
+        let finalResponse = aiResponse;
+        if ((request as any)._truncationWarning) {
+          finalResponse = {
+            ...aiResponse,
+            metadata: {
+              ...(typeof aiResponse === 'object' && aiResponse.metadata ? aiResponse.metadata : {}),
+              conversationHistory: (request as any)._truncationWarning
+            }
+          };
+        }
+
+        const response = Response.json(finalResponse);
         return addCorsHeaders(response);
       }
 
-      // OpenAI-compatible chat completions endpoint
-      if (url.pathname === '/api/v1/chat/completions' && request.method === 'POST') {
-        const body = await request.json() as OpenAICompatibleRequest;
-        
-        if (!body.messages || !Array.isArray(body.messages)) {
-          const response = Response.json(
-            { error: 'Missing required field: messages' },
-            { status: 400 }
-          );
-          return addCorsHeaders(response);
-        }
-
-        const model = body.model || '@cf/openai/gpt-oss-120b';
-        
-        // Extract system instructions and conversation history
-        let systemInstructions = '';
-        const conversationHistory: ConversationMessage[] = [];
-        let currentUserMessage = '';
-        
-        // Process messages to build context
-        for (const msg of body.messages) {
-          if (msg.role === 'system' && !systemInstructions) {
-            // Use first system message as base instructions
-            systemInstructions = msg.content;
-          } else if (msg.role === 'user' || msg.role === 'assistant') {
-            if (msg === body.messages[body.messages.length - 1] && msg.role === 'user') {
-              // Last user message is the current input
-              currentUserMessage = msg.content;
-            } else {
-              // Everything else is conversation history
-              conversationHistory.push({
-                role: msg.role as 'user' | 'assistant',
-                content: msg.content
-              });
-            }
-          }
-        }
-        
-        // If no current user message found, use the last message
-        if (!currentUserMessage && body.messages.length > 0) {
-          const lastMsg = body.messages[body.messages.length - 1];
-          currentUserMessage = lastMsg.content;
-        }
-        
-        // Build enhanced instructions with conversation history
-        const enhancedInstructions = buildEnhancedInstructions(
-          systemInstructions || 'You are a helpful AI assistant.',
-          conversationHistory
-        );
-        
-        console.log('OpenAI endpoint - History length:', conversationHistory.length, 'messages');
-        
-        // Convert OpenAI format to Responses API format
-        const aiResponse = await env.AI.run(model as any, {
-          input: currentUserMessage,
-          instructions: enhancedInstructions,
-          reasoning: { effort: 'medium' }
-        });
-
-        // Extract the actual response content
-        let responseContent = '';
-        if (typeof aiResponse === 'string') {
-          responseContent = aiResponse;
-        } else if (aiResponse && typeof aiResponse === 'object' && 'response' in aiResponse) {
-          responseContent = (aiResponse as any).response;
-        } else {
-          responseContent = JSON.stringify(aiResponse);
-        }
-
-        // Convert response to OpenAI-compatible format
-        const openaiResponse = {
-          id: `chatcmpl-${Date.now()}`,
-          object: 'chat.completion',
-          created: Math.floor(Date.now() / 1000),
-          model: model,
-          choices: [
-            {
-              index: 0,
-              message: {
-                role: 'assistant',
-                content: responseContent
-              },
-              finish_reason: 'stop'
-            }
-          ],
-          usage: {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0
-          }
-        };
-
-        const response = Response.json(openaiResponse);
-        return addCorsHeaders(response);
-      }
 
       // Code interpreter endpoint
       if (url.pathname === '/api/v1/code' && request.method === 'POST') {
@@ -274,7 +208,7 @@ export default {
 
       // 404 for unmatched routes
       const response = Response.json(
-        { error: 'Endpoint not found', available_endpoints: ['/health', '/api/v1/chat', '/api/v1/chat/completions', '/api/v1/models', '/api/v1/code'] },
+        { error: 'Endpoint not found', available_endpoints: ['/health', '/api/v1/chat', '/api/v1/models', '/api/v1/code'] },
         { status: 404 }
       );
       return addCorsHeaders(response);

@@ -1,11 +1,11 @@
 # Cloudflare AI Worker - GPT-OSS
 
-Production-ready Cloudflare Worker providing access to OpenAI's GPT-OSS models.
+Production-ready Cloudflare Worker providing access to GPT-OSS models via Cloudflare AI.
 
 ## Features
 
 - Access to GPT-OSS models (120B and 20B parameters)
-- Multiple API formats (Responses API and OpenAI-compatible)
+- Native Cloudflare AI Responses API format
 - Conversation history support
 - Code interpreter capabilities
 - CORS enabled
@@ -32,17 +32,6 @@ curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \
   }'
 ```
 
-### OpenAI-Compatible Format
-```bash
-curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "messages": [
-      {"role": "system", "content": "You are a helpful assistant"},
-      {"role": "user", "content": "Hello!"}
-    ]
-  }'
-```
 
 For more examples including code interpreter, custom instructions, and error handling, see [.project/docs/example_curls.md](.project/docs/example_curls.md).
 
@@ -53,34 +42,14 @@ For more examples including code interpreter, custom instructions, and error han
 | `@cf/openai/gpt-oss-120b` | 120B | 128,000 tokens | Production, general purpose, high reasoning |
 | `@cf/openai/gpt-oss-20b` | 20B | 128,000 tokens | Faster responses, lighter workloads |
 
-## Response Formats
+## Response Format
 
-### Responses API Format
-The native format used by GPT-OSS models:
+The API uses the native Cloudflare AI Responses format:
 ```json
 {
-  \"response\": \"AI response content\",
-  \"reasoning\": {...},
-  \"metadata\": {...}
-}
-```
-
-### OpenAI-Compatible Format
-Standard OpenAI chat completions format:
-```json
-{
-  \"id\": \"chatcmpl-123\",
-  \"object\": \"chat.completion\",
-  \"created\": 1677652288,
-  \"model\": \"@cf/openai/gpt-oss-120b\",
-  \"choices\": [{
-    \"index\": 0,
-    \"message\": {
-      \"role\": \"assistant\",
-      \"content\": \"AI response content\"
-    },
-    \"finish_reason\": \"stop\"
-  }]
+  "response": "AI response content",
+  "reasoning": {...},
+  "metadata": {...}
 }
 ```
 

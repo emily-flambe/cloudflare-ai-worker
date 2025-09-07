@@ -45,16 +45,43 @@ export function formatConversationHistory(conversationHistory: ConversationMessa
   return contextLines.join('\n');
 }
 
+// Model token limits and their approximate character equivalents
+export const MODEL_TOKEN_LIMITS = {
+  '@cf/openai/gpt-oss-120b': { tokens: 128000, estimatedChars: 512000 },
+  '@cf/openai/gpt-oss-20b': { tokens: 128000, estimatedChars: 512000 }
+} as const;
+
+// Default to a conservative estimate if model is not known
+export const DEFAULT_TOKEN_LIMIT = { tokens: 128000, estimatedChars: 400000 };
+
+export function getCharacterLimitForModel(model: string): number {
+  const modelConfig = MODEL_TOKEN_LIMITS[model as keyof typeof MODEL_TOKEN_LIMITS];
+  return modelConfig ? modelConfig.estimatedChars : DEFAULT_TOKEN_LIMIT.estimatedChars;
+}
+
+export interface TruncationResult {
+  history: ConversationMessage[];
+  wasTruncated: boolean;
+  originalLength: number;
+  truncatedLength: number;
+}
+
 export function validateAndTruncateHistory(
   conversationHistory: ConversationMessage[] | undefined,
-  maxCharacters: number = 100000
-): ConversationMessage[] {
+  maxCharacters: number = DEFAULT_TOKEN_LIMIT.estimatedChars
+): TruncationResult {
   if (!conversationHistory || !Array.isArray(conversationHistory)) {
-    return [];
+    return {
+      history: [],
+      wasTruncated: false,
+      originalLength: 0,
+      truncatedLength: 0
+    };
   }
 
   let totalChars = 0;
   const truncatedHistory: ConversationMessage[] = [];
+  let wasTruncated = false;
 
   // Process history in reverse (keep most recent messages)
   for (let i = conversationHistory.length - 1; i >= 0; i--) {
@@ -67,6 +94,7 @@ export function validateAndTruncateHistory(
         role: 'system',
         content: '[Earlier conversation history was truncated due to length]'
       });
+      wasTruncated = true;
       break;
     }
 
@@ -74,7 +102,12 @@ export function validateAndTruncateHistory(
     truncatedHistory.unshift(msg);
   }
 
-  return truncatedHistory;
+  return {
+    history: truncatedHistory,
+    wasTruncated,
+    originalLength: conversationHistory.length,
+    truncatedLength: truncatedHistory.length
+  };
 }
 
 export function buildEnhancedInstructions(
