@@ -1,6 +1,12 @@
 name = "ai-worker"
 main = "src/index.ts"
 compatibility_date = "2025-08-08"
+account_id = "facf6619808dc039df729531bbb26d1d"
 
 [ai]
 binding = "AI"
+
+# AI Gateway configuration
+# Set your AI Gateway ID to enable caching, analytics, and rate limiting
+[vars]
+AI_GATEWAY_ID = "ai-gateway"

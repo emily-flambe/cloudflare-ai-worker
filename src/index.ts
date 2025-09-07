@@ -7,6 +7,7 @@ import {
 
 interface Env {
   AI: Ai;
+  AI_GATEWAY_ID?: string;
 }
 
 interface ChatMessage {
@@ -22,6 +23,10 @@ interface ResponsesAPIRequest {
     effort: 'low' | 'medium' | 'high';
   };
   conversationHistory?: ConversationMessage[];
+  gateway?: {
+    skipCache?: boolean;
+    cacheTtl?: number;
+  };
 }
 
 interface OpenAICompatibleRequest {
@@ -30,6 +35,10 @@ interface OpenAICompatibleRequest {
   max_tokens?: number;
   temperature?: number;
   stream?: boolean;
+  gateway?: {
+    skipCache?: boolean;
+    cacheTtl?: number;
+  };
 }
 
 function addCorsHeaders(response: Response): Response {
@@ -65,8 +74,16 @@ export default {
           },
           endpoints: {
             '/api/v1/chat': 'Responses API format',
-            '/api/v1/chat/completions': 'OpenAI-compatible format (coming soon)',
+            '/api/v1/chat/completions': 'OpenAI-compatible format',
             '/api/v1/models': 'List available models'
+          },
+          gateway: env.AI_GATEWAY_ID ? {
+            enabled: true,
+            id: env.AI_GATEWAY_ID,
+            features: ['caching', 'rate-limiting', 'analytics', 'fallback']
+          } : {
+            enabled: false,
+            message: 'AI Gateway not configured. Set AI_GATEWAY_ID environment variable to enable.'
           },
           timestamp: new Date().toISOString()
         });
@@ -142,11 +159,18 @@ export default {
           console.log('Enhanced instructions length:', enhancedInstructions.length, 'chars');
         }
 
+        // Configure gateway settings with defaults
+        const gatewayConfig = env.AI_GATEWAY_ID ? {
+          id: env.AI_GATEWAY_ID,
+          skipCache: body.gateway?.skipCache ?? false,
+          cacheTtl: body.gateway?.cacheTtl ?? 3600  // Default 1 hour cache
+        } : undefined;
+
         const aiResponse = await env.AI.run(model as any, {
           input: body.input,
           instructions: enhancedInstructions,
           reasoning: body.reasoning || { effort: 'medium' }
-        });
+        }, gatewayConfig ? { gateway: gatewayConfig } : {});
 
         const response = Response.json(aiResponse);
         return addCorsHeaders(response);
@@ -205,11 +229,18 @@ export default {
         console.log('OpenAI endpoint - History length:', conversationHistory.length, 'messages');
         
         // Convert OpenAI format to Responses API format
+        // Configure gateway settings with defaults
+        const gatewayConfig = env.AI_GATEWAY_ID ? {
+          id: env.AI_GATEWAY_ID,
+          skipCache: body.gateway?.skipCache ?? false,
+          cacheTtl: body.gateway?.cacheTtl ?? 3600  // Default 1 hour cache
+        } : undefined;
+
         const aiResponse = await env.AI.run(model as any, {
           input: currentUserMessage,
           instructions: enhancedInstructions,
           reasoning: { effort: 'medium' }
-        });
+        }, gatewayConfig ? { gateway: gatewayConfig } : {});
 
         // Extract the actual response content
         let responseContent = '';
@@ -262,11 +293,18 @@ export default {
 
         const model = body.model || '@cf/openai/gpt-oss-120b';
         
+        // Configure gateway settings with defaults for code interpreter (shorter cache due to dynamic nature)
+        const gatewayConfig = env.AI_GATEWAY_ID ? {
+          id: env.AI_GATEWAY_ID,
+          skipCache: body.gateway?.skipCache ?? false,
+          cacheTtl: body.gateway?.cacheTtl ?? 300  // Default 5 min cache for code interpreter
+        } : undefined;
+
         const aiResponse = await env.AI.run(model as any, {
           input: body.input,
           instructions: body.instructions || 'You are a helpful AI assistant with code interpreter capabilities. Use code execution when needed to solve mathematical problems, data analysis, or programming tasks.',
           reasoning: { effort: 'high' }
-        });
+        }, gatewayConfig ? { gateway: gatewayConfig } : {});
 
         const response = Response.json(aiResponse);
         return addCorsHeaders(response);

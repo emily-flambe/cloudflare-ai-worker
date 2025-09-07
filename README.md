@@ -9,6 +9,7 @@ Production-ready Cloudflare Worker providing access to OpenAI's GPT-OSS models.
 - Conversation history support
 - Code interpreter capabilities
 - CORS enabled
+- **AI Gateway Integration**: Caching, rate limiting, analytics, and fallback support
 
 ## Quick Start
 
@@ -29,6 +30,19 @@ curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \
       {"role": "user", "content": "What is quantum computing?"},
       {"role": "assistant", "content": "Quantum computing uses quantum mechanics..."}
     ]
+  }'
+```
+
+### With AI Gateway Cache Control
+```bash
+curl -X POST https://ai-worker.emily-cogsdill.workers.dev/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Generate a random creative story",
+    "gateway": {
+      "skipCache": true,
+      "cacheTtl": 0
+    }
   }'
 ```
 
@@ -83,6 +97,61 @@ Standard OpenAI chat completions format:
   }]
 }
 ```
+
+## AI Gateway Configuration
+
+This Worker integrates with Cloudflare AI Gateway for enhanced monitoring and control:
+
+### Gateway Features
+- **Caching**: Reduce costs by caching identical requests (default: 1 hour TTL)
+- **Analytics**: Track token usage, request counts, and costs in the AI Gateway dashboard
+- **Rate Limiting**: Control request rates (configured in AI Gateway dashboard)
+- **Fallback**: Automatic model fallback support
+
+### Cache Control Options
+
+#### Default Caching
+By default, responses are cached for 1 hour (3600 seconds):
+```json
+{
+  "input": "What is the capital of France?"
+}
+```
+
+#### Skip Cache
+For dynamic/personalized responses, skip the cache:
+```json
+{
+  "input": "Generate a random story",
+  "gateway": {
+    "skipCache": true
+  }
+}
+```
+
+#### Custom Cache TTL
+Set a custom cache duration (in seconds):
+```json
+{
+  "input": "What's the weather like?",
+  "gateway": {
+    "cacheTtl": 300  // Cache for 5 minutes
+  }
+}
+```
+
+### Gateway Setup
+
+1. Create an AI Gateway in your Cloudflare dashboard
+2. Update `wrangler.toml` with your gateway ID:
+   ```toml
+   [vars]
+   AI_GATEWAY_ID = "your-gateway-id"
+   ```
+3. Deploy your worker to activate the gateway integration
+
+### Gateway Dashboard
+Monitor your AI usage at: https://dash.cloudflare.com/?to=/:account/ai/ai-gateway
 
 ## Development
 
