@@ -1,3 +1,10 @@
+import { 
+  ConversationMessage, 
+  validateAndTruncateHistory, 
+  buildEnhancedInstructions,
+  formatConversationHistory 
+} from './conversation-utils';
+
 interface Env {
   AI: Ai;
 }
@@ -14,6 +21,7 @@ interface ResponsesAPIRequest {
   reasoning?: {
     effort: 'low' | 'medium' | 'high';
   };
+  conversationHistory?: ConversationMessage[];
 }
 
 interface OpenAICompatibleRequest {
@@ -120,9 +128,23 @@ export default {
           return addCorsHeaders(response);
         }
 
-        const aiResponse = await env.AI.run(model, {
+        // Handle conversation history if provided
+        let enhancedInstructions = body.instructions || 'You are a helpful AI assistant.';
+        
+        if (body.conversationHistory && body.conversationHistory.length > 0) {
+          // Validate and truncate history to prevent token overflow
+          const validatedHistory = validateAndTruncateHistory(body.conversationHistory, 90000);
+          
+          // Build enhanced instructions with conversation context
+          enhancedInstructions = buildEnhancedInstructions(body.instructions, validatedHistory);
+          
+          console.log('Conversation history length:', validatedHistory.length, 'messages');
+          console.log('Enhanced instructions length:', enhancedInstructions.length, 'chars');
+        }
+
+        const aiResponse = await env.AI.run(model as any, {
           input: body.input,
-          instructions: body.instructions || 'You are a helpful AI assistant.',
+          instructions: enhancedInstructions,
           reasoning: body.reasoning || { effort: 'medium' }
         });
 
@@ -144,11 +166,60 @@ export default {
 
         const model = body.model || '@cf/openai/gpt-oss-120b';
         
+        // Extract system instructions and conversation history
+        let systemInstructions = '';
+        const conversationHistory: ConversationMessage[] = [];
+        let currentUserMessage = '';
+        
+        // Process messages to build context
+        for (const msg of body.messages) {
+          if (msg.role === 'system' && !systemInstructions) {
+            // Use first system message as base instructions
+            systemInstructions = msg.content;
+          } else if (msg.role === 'user' || msg.role === 'assistant') {
+            if (msg === body.messages[body.messages.length - 1] && msg.role === 'user') {
+              // Last user message is the current input
+              currentUserMessage = msg.content;
+            } else {
+              // Everything else is conversation history
+              conversationHistory.push({
+                role: msg.role as 'user' | 'assistant',
+                content: msg.content
+              });
+            }
+          }
+        }
+        
+        // If no current user message found, use the last message
+        if (!currentUserMessage && body.messages.length > 0) {
+          const lastMsg = body.messages[body.messages.length - 1];
+          currentUserMessage = lastMsg.content;
+        }
+        
+        // Build enhanced instructions with conversation history
+        const enhancedInstructions = buildEnhancedInstructions(
+          systemInstructions || 'You are a helpful AI assistant.',
+          conversationHistory
+        );
+        
+        console.log('OpenAI endpoint - History length:', conversationHistory.length, 'messages');
+        
         // Convert OpenAI format to Responses API format
-        const aiResponse = await env.AI.run(model, {
-          input: body.messages,
+        const aiResponse = await env.AI.run(model as any, {
+          input: currentUserMessage,
+          instructions: enhancedInstructions,
           reasoning: { effort: 'medium' }
         });
+
+        // Extract the actual response content
+        let responseContent = '';
+        if (typeof aiResponse === 'string') {
+          responseContent = aiResponse;
+        } else if (aiResponse && typeof aiResponse === 'object' && 'response' in aiResponse) {
+          responseContent = (aiResponse as any).response;
+        } else {
+          responseContent = JSON.stringify(aiResponse);
+        }
 
         // Convert response to OpenAI-compatible format
         const openaiResponse = {
@@ -161,7 +232,7 @@ export default {
               index: 0,
               message: {
                 role: 'assistant',
-                content: typeof aiResponse === 'string' ? aiResponse : JSON.stringify(aiResponse)
+                content: responseContent
               },
               finish_reason: 'stop'
             }
@@ -191,7 +262,7 @@ export default {
 
         const model = body.model || '@cf/openai/gpt-oss-120b';
         
-        const aiResponse = await env.AI.run(model, {
+        const aiResponse = await env.AI.run(model as any, {
           input: body.input,
           instructions: body.instructions || 'You are a helpful AI assistant with code interpreter capabilities. Use code execution when needed to solve mathematical problems, data analysis, or programming tasks.',
           reasoning: { effort: 'high' }
