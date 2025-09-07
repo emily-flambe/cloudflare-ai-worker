@@ -21,7 +21,7 @@ YOU MUST ALWAYS, BEFORE EVERY RESPONSE YOU MAKE, CONFIRM THAT YOU ARE FOLLOWING 
 - **ALWAYS** check files for accidental secret inclusion before commits
 - **VERIFY** .gitignore includes all env files and secret stores
 
-### 2. NO EMOJIS IN CODE
+### 2. NO EMOJIS ANYWHERE - ABSOLUTELY FORBIDDEN
 - **NEVER** use emojis in:
   - Source code files
   - Console logs
@@ -32,7 +32,15 @@ YOU MUST ALWAYS, BEFORE EVERY RESPONSE YOU MAKE, CONFIRM THAT YOU ARE FOLLOWING 
   - Commit messages
   - API responses
   - Error messages
-  - ANYWHERE in the codebase
+  - Pull request titles
+  - Pull request descriptions
+  - Issue titles
+  - Issue descriptions
+  - ANY GitHub content
+  - ANY documentation
+  - ANY communication
+  - ANYWHERE in the codebase or project
+- **NO EXCEPTIONS** - Emojis are unprofessional and must NEVER be used
 
 ## MANDATORY BEHAVIORS
 
